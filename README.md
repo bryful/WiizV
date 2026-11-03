@@ -2,6 +2,10 @@
 
 SFC版Wizardry V向けのWindows／Android用プレイヤーです。5スロットのステート保存、通常速度の音声を維持する倍速プレイ、全階層マップからの自由移動、常時効果、キャラクターのGOLD・経験値・属性変更に対応しています。
 
+## ダウンロード
+
+Windows／Androidの配布版（ビルド済みバイナリ）は、[WiizV_app](https://github.com/bryful/WiizV_app)からダウンロードできます。ROMは付属しません。
+
 ## Android版
 
 Android 6以降のARM64端末向けのRelease署名済みAPKです。x86_64エミュレーターにも対応しています。ROMは付属しません。
