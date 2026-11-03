@@ -4,7 +4,9 @@ SFC版Wizardry V向けのWindows／Android用プレイヤーです。5スロッ�
 
 ## ダウンロード
 
-Windows／Androidの配布版（ビルド済みバイナリ）は、[WiizV_app](https://github.com/bryful/WiizV_app)からダウンロードできます。ROMは付属しません。
+Windows／Android版のアプリは、[WiizV_appのReleases](https://github.com/bryful/WiizV_app/releases)からダウンロードできます。ROMは付属しません。
+
+ソースコードは[WiizV](https://github.com/bryful/WiizV)からダウンロードできます。リポジトリの「Code」→「Download ZIP」を選んでください。
 
 ## Android版
 
@@ -34,7 +36,7 @@ Androidのキャラクター編集には「全てのスペルを覚える」が�
 
 選択したWiizVフォルダの`Saves/<ROM名>.srm`に通常セーブ、`States`にステート、`settings.ini`に設定を保存します。フォルダの権限が失効した場合は起動画面から選び直してください。別の保存フォルダのデータは混ぜません。
 
-画面の黒地・白枠に合わせた日本語メニューと、原作フォントによるキャラクター名表示を使用します。実機パッドや端末ごとの音声・操作感は、今後の実機確認で調整します。
+画面の黒地・白枠に合わせた日本語メニューと、原作フォントによるキャラクター名表示を使用します。
 
 ## 起動
 
@@ -155,11 +157,6 @@ MP維持をOFFにすると、残り回数を本来の最大回数以内に戻し
 Snes9xとSDL3を使用しています。付属の`licenses`を参照してください。Snes9xには非商用利用の条件があります。
 
 旧版のLocalAppData内のデータは初回起動時に自動で引き継ぎます。Roaming側に同名ファイルがある場合はそちらを優先し、旧ファイルも残します。
-
-## ソースのビルド
-
-Windows: Visual Studio 2026 の C++ デスクトップ開発環境で `powershell -File tools/build.ps1 -Configuration Release` を実行します。
-Android: JDK 21 の `JAVA_HOME` と Android SDK の `ANDROID_HOME` を設定し、`powershell -File tools/build-android.ps1` を実行します。必要な SDK・NDK のバージョンは `android/app/build.gradle` を参照してください。Release 署名の準備は `android/SIGNING.md` に記載しています。署名鍵は各自で作成し、公開しないでください。
 
 ## ライセンス
 
