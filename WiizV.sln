@@ -1,0 +1,27 @@
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 18
+VisualStudioVersion = 18.0.0.0
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{BC8A1FFA-BEE3-4634-8014-F334798102B3}") = "WiizV", "WiizV.vcxproj", "{D05A8483-5401-4FE1-8272-01150248D242}"
+ ProjectSection(ProjectDependencies) = postProject
+  {DB353010-8837-45A8-AECF-9FEE2328FEDE} = {DB353010-8837-45A8-AECF-9FEE2328FEDE}
+ EndProjectSection
+EndProject
+Project("{BC8A1FFA-BEE3-4634-8014-F334798102B3}") = "WiizVCore", "third_party\snes9x\WiizVCore.vcxproj", "{DB353010-8837-45A8-AECF-9FEE2328FEDE}"
+EndProject
+Global
+ GlobalSection(SolutionConfigurationPlatforms) = preSolution
+  Debug|x64 = Debug|x64
+  Release|x64 = Release|x64
+ EndGlobalSection
+ GlobalSection(ProjectConfigurationPlatforms) = postSolution
+  {DB353010-8837-45A8-AECF-9FEE2328FEDE}.Debug|x64.ActiveCfg = Release|x64
+  {DB353010-8837-45A8-AECF-9FEE2328FEDE}.Debug|x64.Build.0 = Release|x64
+  {DB353010-8837-45A8-AECF-9FEE2328FEDE}.Release|x64.ActiveCfg = Release|x64
+  {DB353010-8837-45A8-AECF-9FEE2328FEDE}.Release|x64.Build.0 = Release|x64
+  {D05A8483-5401-4FE1-8272-01150248D242}.Debug|x64.ActiveCfg = Debug|x64
+  {D05A8483-5401-4FE1-8272-01150248D242}.Debug|x64.Build.0 = Debug|x64
+  {D05A8483-5401-4FE1-8272-01150248D242}.Release|x64.ActiveCfg = Release|x64
+  {D05A8483-5401-4FE1-8272-01150248D242}.Release|x64.Build.0 = Release|x64
+ EndGlobalSection
+EndGlobal

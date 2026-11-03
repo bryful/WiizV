@@ -1,0 +1,26 @@
+WiizV 配布パッケージ
+2026年10月25日
+
+最初に「使用説明書.html」をブラウザーで開いてください。
+詳しい機能説明は「使用説明書.md」にも収録しています。
+
+Windows版
+  Windows\WiizV.exe を起動します。
+  同梱DLLとlicensesを含め、Windowsフォルダーごと配置してください。
+  所有する対応ROMをWindows\Romへ置くか、起動時に選択します。
+  通常セーブ・設定は %APPDATA%\WiizV に保存します。
+
+Android版
+  Android\WiizV-0.2.4-release.apk を端末へコピーしてインストールします。
+  Android 6以降のARM64端末向けです。x86_64にも対応します。
+  WiizV専用のRelease鍵で署名した配布版です。
+  旧debug版からは上書きできません。先にDocuments/WiizV全体を別の場所へ
+  コピーして控え、旧アプリをアンインストールしてから導入してください。
+  Documents/WiizV自体は削除せず、起動後に同じ保存フォルダーを選び直します。
+  以後の同じRelease署名の更新版は上書きインストールできます。
+  起動時にDocumentsまたはDocuments/WiizVを選び、アクセスを許可します。
+  所有する対応ROMを選択して開始します。
+
+ROM・通常セーブ・ステートなどのプレイデータは付属しません。
+ライセンス・Snes9xのソース等はWindows\licensesおよびAPK内にあります。
+Snes9xには非商用利用の条件があります。

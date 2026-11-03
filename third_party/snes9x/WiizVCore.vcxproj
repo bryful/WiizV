@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+ <ItemGroup Label="ProjectConfigurations">
+  <ProjectConfiguration Include="Debug|x64"><Configuration>Debug</Configuration><Platform>x64</Platform></ProjectConfiguration>
+  <ProjectConfiguration Include="Release|x64"><Configuration>Release</Configuration><Platform>x64</Platform></ProjectConfiguration>
+ </ItemGroup>
+ <PropertyGroup Label="Globals"><ProjectGuid>{DB353010-8837-45A8-AECF-9FEE2328FEDE}</ProjectGuid><WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion></PropertyGroup>
+ <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+ <PropertyGroup Label="Configuration"><ConfigurationType>DynamicLibrary</ConfigurationType><PlatformToolset>v145</PlatformToolset><UseDebugLibraries>false</UseDebugLibraries></PropertyGroup>
+ <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+ <PropertyGroup Label="UserMacros" />
+ <PropertyGroup><PreferredToolArchitecture>x64</PreferredToolArchitecture><TargetName>wiizv_snes9x</TargetName></PropertyGroup>
+ <ItemDefinitionGroup>
+  <ClCompile><WarningLevel>Level1</WarningLevel><Optimization>MaxSpeed</Optimization><MultiProcessorCompilation>true</MultiProcessorCompilation><LanguageStandard>stdcpp17</LanguageStandard><PreprocessorDefinitions>__LIBRETRO__;ALLOW_CPU_OVERCLOCK;__WIN32__;_CRT_SECURE_NO_WARNINGS;_CRT_NONSTDC_NO_DEPRECATE;NDEBUG;__inline__=__inline;%(PreprocessorDefinitions)</PreprocessorDefinitions><AdditionalIncludeDirectories>upstream;upstream/libretro;upstream/libretro/libretro-common/include;upstream/apu;upstream/apu/bapu;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories><ForcedIncludeFiles>$(ProjectDir)wiizv_linkage.h;%(ForcedIncludeFiles)</ForcedIncludeFiles><ExceptionHandling>Sync</ExceptionHandling><AdditionalOptions>/utf-8 %(AdditionalOptions)</AdditionalOptions></ClCompile>
+  <Link><ModuleDefinitionFile>WiizVCore.def</ModuleDefinitionFile><AdditionalDependencies>crypt32.lib;winmm.lib;ws2_32.lib;%(AdditionalDependencies)</AdditionalDependencies></Link>
+  <PostBuildEvent><Command>copy /Y "$(TargetPath)" "$(ProjectDir)wiizv_snes9x.dll" || exit /b 1</Command></PostBuildEvent>
+ </ItemDefinitionGroup>
+ <ItemGroup>
+<ClCompile Include="upstream/c4emu.c"><ObjectFileName>$(IntDir)upstream_c4emu_c.obj</ObjectFileName></ClCompile>
+<ClCompile Include="upstream/msu1.c"><ObjectFileName>$(IntDir)upstream_msu1_c.obj</ObjectFileName></ClCompile>
+<ClCompile Include="upstream/zipfile.c"><ObjectFileName>$(IntDir)upstream_zipfile_c.obj</ObjectFileName></ClCompile>
+<ClCompile Include="upstream/srtc.c"><ObjectFileName>$(IntDir)upstream_srtc_c.obj</ObjectFileName></ClCompile>
+<ClCompile Include="upstream/obc1.c"><ObjectFileName>$(IntDir)upstream_obc1_c.obj</ObjectFileName></ClCompile>
+<ClCompile Include="upstream/bsflash.c"><ObjectFileName>$(IntDir)upstream_bsflash_c.obj</ObjectFileName></ClCompile>
+<ClCompile Include="upstream/tile.c"><ObjectFileName>$(IntDir)upstream_tile_c.obj</ObjectFileName></ClCompile>
+<ClCompile Include="upstream/bsx.c"><ObjectFileName>$(IntDir)upstream_bsx_c.obj</ObjectFileName></ClCompile>
+<ClCompile Include="upstream/spc7110.c"><ObjectFileName>$(IntDir)upstream_spc7110_c.obj</ObjectFileName></ClCompile>
+<ClCompile Include="upstream/fxemu.c"><ObjectFileName>$(IntDir)upstream_fxemu_c.obj</ObjectFileName></ClCompile>
+<ClCompile Include="upstream/sdd1.c"><ObjectFileName>$(IntDir)upstream_sdd1_c.obj</ObjectFileName></ClCompile>
+<ClCompile Include="upstream/seta.c"><ObjectFileName>$(IntDir)upstream_seta_c.obj</ObjectFileName></ClCompile>
+<ClCompile Include="upstream/sa1hw.c"><ObjectFileName>$(IntDir)upstream_sa1hw_c.obj</ObjectFileName></ClCompile>
+<ClCompile Include="upstream/dsp.c"><ObjectFileName>$(IntDir)upstream_dsp_c.obj</ObjectFileName></ClCompile>
+<ClCompile Include="upstream/filter/snes_ntsc.c"><ObjectFileName>$(IntDir)upstream_filter_snes_ntsc_c.obj</ObjectFileName></ClCompile>
+<ClCompile Include="upstream/apu/apu.cpp"><ObjectFileName>$(IntDir)upstream_apu_apu_cpp.obj</ObjectFileName></ClCompile>
+<ClCompile Include="upstream/apu/bapu/dsp/sdsp.cpp"><ObjectFileName>$(IntDir)upstream_apu_bapu_dsp_sdsp_cpp.obj</ObjectFileName></ClCompile>
+<ClCompile Include="upstream/apu/bapu/smp/smp.cpp"><ObjectFileName>$(IntDir)upstream_apu_bapu_smp_smp_cpp.obj</ObjectFileName></ClCompile>
+<ClCompile Include="upstream/apu/bapu/smp/smp_state.cpp"><ObjectFileName>$(IntDir)upstream_apu_bapu_smp_smp_state_cpp.obj</ObjectFileName></ClCompile>
+<ClCompile Include="upstream/cheats2.cpp"><ObjectFileName>$(IntDir)upstream_cheats2_cpp.obj</ObjectFileName></ClCompile>
+<ClCompile Include="upstream/clip.cpp"><ObjectFileName>$(IntDir)upstream_clip_cpp.obj</ObjectFileName></ClCompile>
+<ClCompile Include="upstream/controls.cpp"><ObjectFileName>$(IntDir)upstream_controls_cpp.obj</ObjectFileName></ClCompile>
+<ClCompile Include="upstream/cpu.cpp"><ObjectFileName>$(IntDir)upstream_cpu_cpp.obj</ObjectFileName></ClCompile>
+<ClCompile Include="upstream/cpuexec.cpp"><ObjectFileName>$(IntDir)upstream_cpuexec_cpp.obj</ObjectFileName></ClCompile>
+<ClCompile Include="upstream/cpuops.cpp"><ObjectFileName>$(IntDir)upstream_cpuops_cpp.obj</ObjectFileName></ClCompile>
+<ClCompile Include="upstream/crosshairs.cpp"><ObjectFileName>$(IntDir)upstream_crosshairs_cpp.obj</ObjectFileName></ClCompile>
+<ClCompile Include="upstream/dma.cpp"><ObjectFileName>$(IntDir)upstream_dma_cpp.obj</ObjectFileName></ClCompile>
+<ClCompile Include="upstream/gfx.cpp"><ObjectFileName>$(IntDir)upstream_gfx_cpp.obj</ObjectFileName></ClCompile>
+<ClCompile Include="upstream/globals.cpp"><ObjectFileName>$(IntDir)upstream_globals_cpp.obj</ObjectFileName></ClCompile>
+<ClCompile Include="upstream/loadzip.cpp"><ObjectFileName>$(IntDir)upstream_loadzip_cpp.obj</ObjectFileName></ClCompile>
+<ClCompile Include="upstream/memmap.cpp"><ObjectFileName>$(IntDir)upstream_memmap_cpp.obj</ObjectFileName></ClCompile>
+<ClCompile Include="upstream/ppu.cpp"><ObjectFileName>$(IntDir)upstream_ppu_cpp.obj</ObjectFileName></ClCompile>
+<ClCompile Include="upstream/sa1.cpp"><ObjectFileName>$(IntDir)upstream_sa1_cpp.obj</ObjectFileName></ClCompile>
+<ClCompile Include="upstream/sa1cpu.cpp"><ObjectFileName>$(IntDir)upstream_sa1cpu_cpp.obj</ObjectFileName></ClCompile>
+<ClCompile Include="upstream/snapshot.cpp"><ObjectFileName>$(IntDir)upstream_snapshot_cpp.obj</ObjectFileName></ClCompile>
+<ClCompile Include="upstream/sha256.cpp"><ObjectFileName>$(IntDir)upstream_sha256_cpp.obj</ObjectFileName></ClCompile>
+<ClCompile Include="upstream/bml.cpp"><ObjectFileName>$(IntDir)upstream_bml_cpp.obj</ObjectFileName></ClCompile>
+<ClCompile Include="upstream/fscompat.cpp"><ObjectFileName>$(IntDir)upstream_fscompat_cpp.obj</ObjectFileName></ClCompile>
+<ClCompile Include="upstream/libretro/libretro.cpp"><ObjectFileName>$(IntDir)upstream_libretro_libretro_cpp.obj</ObjectFileName></ClCompile>
+<ClCompile Include="upstream/libretro/libretro-common/compat/compat_posix_string.c"><ObjectFileName>$(IntDir)upstream_libretro_libretro-common_compat_compat_posix_string_c.obj</ObjectFileName></ClCompile>
+<ClCompile Include="upstream/libretro/libretro-common/compat/compat_strcasestr.c"><ObjectFileName>$(IntDir)upstream_libretro_libretro-common_compat_compat_strcasestr_c.obj</ObjectFileName></ClCompile>
+<ClCompile Include="upstream/libretro/libretro-common/compat/compat_snprintf.c"><ObjectFileName>$(IntDir)upstream_libretro_libretro-common_compat_compat_snprintf_c.obj</ObjectFileName></ClCompile>
+<ClCompile Include="upstream/libretro/libretro-common/compat/compat_strl.c"><ObjectFileName>$(IntDir)upstream_libretro_libretro-common_compat_compat_strl_c.obj</ObjectFileName></ClCompile>
+<ClCompile Include="upstream/libretro/libretro-common/compat/fopen_utf8.c"><ObjectFileName>$(IntDir)upstream_libretro_libretro-common_compat_fopen_utf8_c.obj</ObjectFileName></ClCompile>
+<ClCompile Include="upstream/libretro/libretro-common/encodings/encoding_utf.c"><ObjectFileName>$(IntDir)upstream_libretro_libretro-common_encodings_encoding_utf_c.obj</ObjectFileName></ClCompile>
+<ClCompile Include="upstream/libretro/libretro-common/encodings/encoding_deflate.c"><ObjectFileName>$(IntDir)upstream_libretro_libretro-common_encodings_encoding_deflate_c.obj</ObjectFileName></ClCompile>
+<ClCompile Include="upstream/libretro/libretro-common/file/file_path.c"><ObjectFileName>$(IntDir)upstream_libretro_libretro-common_file_file_path_c.obj</ObjectFileName></ClCompile>
+<ClCompile Include="upstream/libretro/libretro-common/file/file_path_io.c"><ObjectFileName>$(IntDir)upstream_libretro_libretro-common_file_file_path_io_c.obj</ObjectFileName></ClCompile>
+<ClCompile Include="upstream/libretro/libretro-common/streams/file_stream.c"><ObjectFileName>$(IntDir)upstream_libretro_libretro-common_streams_file_stream_c.obj</ObjectFileName></ClCompile>
+<ClCompile Include="upstream/libretro/libretro-common/streams/file_stream_transforms.c"><ObjectFileName>$(IntDir)upstream_libretro_libretro-common_streams_file_stream_transforms_c.obj</ObjectFileName></ClCompile>
+<ClCompile Include="upstream/libretro/libretro-common/string/stdstring.c"><ObjectFileName>$(IntDir)upstream_libretro_libretro-common_string_stdstring_c.obj</ObjectFileName></ClCompile>
+<ClCompile Include="upstream/libretro/libretro-common/time/rtime.c"><ObjectFileName>$(IntDir)upstream_libretro_libretro-common_time_rtime_c.obj</ObjectFileName></ClCompile>
+<ClCompile Include="upstream/libretro/libretro-common/vfs/vfs_implementation.c"><ObjectFileName>$(IntDir)upstream_libretro_libretro-common_vfs_vfs_implementation_c.obj</ObjectFileName></ClCompile>
+<ClCompile Include="upstream/libretro/libretro-common/vfs/vfs_hybrid.c"><ObjectFileName>$(IntDir)upstream_libretro_libretro-common_vfs_vfs_hybrid_c.obj</ObjectFileName></ClCompile>
+<ClCompile Include="upstream/libretro/libretro-common/file/retro_dirent.c"><ObjectFileName>$(IntDir)upstream_libretro_libretro-common_file_retro_dirent_c.obj</ObjectFileName></ClCompile>
+ </ItemGroup>
+ <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+</Project>

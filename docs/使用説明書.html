@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="ja">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>WiizV 使用説明書</title>
+<style>
+:root{color-scheme:light}*{box-sizing:border-box}body{margin:0;background:#eef2f5;color:#182735;font:16px/1.85 "Yu Gothic UI","Meiryo",sans-serif}main{max-width:980px;margin:auto;padding:40px 44px 64px;background:white}header{border-bottom:4px solid #39bfa7;padding-bottom:24px;display:flex;gap:28px;align-items:center}header img{width:148px;border-radius:20px}h1{margin:0;font-size:38px}h2{margin-top:40px;color:#003e4d;border-bottom:1px solid #ccd8df;padding-bottom:8px}h3{margin-top:26px}p{margin:12px 0}nav{padding:18px 24px;background:#edf6f5;margin-top:24px}a{color:#006e76}table{width:100%;border-collapse:collapse;margin:18px 0}th,td{border:1px solid #d2dce1;padding:9px 13px;text-align:left}th{background:#edf4f5}code{font-family:Consolas,monospace;overflow-wrap:anywhere;background:#edf1f4;padding:2px 5px}.note{border-left:4px solid #e2ba38;background:#fff9e8;padding:12px 18px}footer{margin-top:44px;font-size:14px;color:#526471}@media(max-width:640px){main{padding:24px 18px}header{gap:16px}header img{width:90px}h1{font-size:30px}th,td{padding:8px;font-size:14px}}@media print{body{background:white}main{padding:0;max-width:none}nav{display:none}h2,h3{break-after:avoid}tr{break-inside:avoid}a{color:inherit;text-decoration:none}}
+</style>
+<main>
+<header><img src="wiizv-icon.png" alt="黄色のVが付いたWiizVのカートリッジアイコン"><div><h1>WiizV 使用説明書</h1><p>SFC版 Wizardry V 用プレイヤー<br>Windows／Android・配布版 2026年10月25日</p></div></header>
+<p>5スロットの保存・読込、音声を通常速度に保つ倍速、全階層マップからの移動、常時効果、キャラクター編集が利用できます。</p>
+<nav><a href="#install">導入</a> ／ <a href="#controls">操作</a> ／ <a href="#save">保存・読込</a> ／ <a href="#speed">倍速</a> ／ <a href="#map">移動マップ</a> ／ <a href="#effects">常時効果</a> ／ <a href="#edit">キャラクター編集</a> ／ <a href="#files">保存先・困ったとき</a></nav>
+<h2 id="install">1. 導入</h2>
+<p>配布フォルダーの<code>Windows</code>にWindows用実行ファイル、<code>Android</code>にAndroid用APKがあります。ROMおよびプレイデータは付属しません。所有する対応ROM（.smc／.sfc）を用意してください。</p>
+<h3>Windows</h3>
+<ol><li><code>Windows</code>フォルダーを、DLL・licensesを含めて任意の場所へコピーします。</li><li><code>WiizV.exe</code>を起動し、ROMを選択します。</li><li>実行ファイル横の<code>Rom</code>にROMを1つ置くと、自動で読み込みます。前回選択したROMの場所も記憶します。</li></ol>
+<p>64ビットWindows向けです。実行ファイルだけを別の場所へ移動せず、同梱DLLと一緒に配置してください。必要なVisual C++ v14ランタイム（x64）が未導入の場合は、<a href="https://learn.microsoft.com/en-us/cpp/windows/latest-supported-vc-redist/">Microsoft公式案内</a>から導入してください。</p>
+<h3>Android</h3>
+<ol><li><code>Android/WiizV-0.2.4-release.apk</code>を端末へコピーしてインストールします。必要に応じて、APKを開くアプリのインストール許可を有効にします。</li><li>WiizVを起動し、「保存フォルダを選ぶ」でDocumentsまたはその中のWiizVを選び、アクセスを許可します。</li><li>所有するROMを選びます。Documents/WiizV直下、またはそのRomフォルダーに置いたROMも候補に表示します。</li></ol>
+<p>Android 6以降のARM64端末向けです。x86_64エミュレーターにも対応します。APKはWiizV専用のRelease鍵で署名しています。同じRelease署名の更新版を上書きインストールできます。</p>
+<div class="note">旧debug署名版からは上書きできません。Documents/WiizV全体を別の場所へコピーして控え、旧アプリをアンインストールしてからRelease版をインストールしてください。Documents/WiizV自体は削除せず、起動後に同じ保存フォルダーとROMを選び直します。以後の同じRelease署名での更新ではアンインストールは不要です。</div>
+<h2 id="controls">2. 操作</h2>
+<table><tr><th>操作</th><th>Windowsのキーボード</th></tr><tr><td>十字キー</td><td>矢印キー</td></tr><tr><td>A／B</td><td>X／Z</td></tr><tr><td>X／Y</td><td>S／A</td></tr><tr><td>L／R</td><td>Q／W</td></tr><tr><td>START／SELECT</td><td>Enter／右Shift</td></tr><tr><td>一時停止</td><td>Esc</td></tr><tr><td>機能メニュー</td><td>F1</td></tr><tr><td>倍率切替</td><td>F2</td></tr><tr><td>移動マップ</td><td>F3</td></tr><tr><td>選択スロットへ保存／読込</td><td>F5／F8</td></tr></table>
+<p>SDL対応ゲームパッドを使用できます。初期設定はSNESの位置（Aが右、Bが下、Xが上、Yが左）です。「ABXY切替」はAとB、XとYをそれぞれ交換します。</p>
+<table><tr><th>メニュー内のパッド操作</th><th>動作</th></tr><tr><td>十字キー上下</td><td>項目を選択</td></tr><tr><td>十字キー左右</td><td>値・保存／読込を変更</td></tr><tr><td>右側ボタン</td><td>決定（AB交換ONでは下側）</td></tr><tr><td>下側ボタン</td><td>戻る（AB交換ONでは右側）</td></tr><tr><td>左スティック押し込み</td><td>機能メニュー</td></tr><tr><td>LT／右スティック押し込み</td><td>スロット1保存／読込</td></tr><tr><td>RT</td><td>探索中に移動マップ</td></tr></table>
+<p>WindowsのメニューはEnterで決定、Escで戻ります。マウスでも操作できます。Androidの機能メニューは上下で選択、左右で値を変更し、画面下の決定・戻るボタン、または外付けパッドで操作します。</p>
+<p>Androidの縦画面では下側、横画面では左右にタッチパッドを配置します。外付けパッドを認識すると通常画面のタッチパッドを隠してゲーム表示を広げます。「機能」から設定を開き、右上の「ゲームに戻る」で閉じます。</p>
+<h2 id="save">3. 保存・読込</h2>
+<p>機能メニューから5つのステートスロットを選べます。Windowsでは上下でスロット、左右でSave／Loadを選択し、決定します。Androidでは各スロットの保存・読込を選びます。</p>
+<p>「保存1」「読込1」、LT保存、右スティック押し込み読込、移動前の自動保存は、同じスロット1を使います。保存すると前の内容を上書きします。</p>
+<p>ステート読込では、ゲーム内の通常セーブ領域も保存時点の内容へ戻ります。通常セーブはゲーム内の保存を利用し、変更内容をファイルへ書き出します。Androidではバックグラウンド移行時に別枠の中断データを保存し、次回起動時に再開します。</p>
+<p class="note">Androidの「リセット」は確認なしでゲームを再起動します。「読込1」も長押しせず、通常のタップで実行します。</p>
+<h2 id="speed">4. 倍速</h2>
+<p>1倍・1.5倍・2倍・3倍・4倍を切り替えます。BGMのテンポとSEの再生速度は通常のまま、SEの発生時刻はゲーム進行に従います。倍率の切替時は短く音が途切れる場合があります。</p>
+<p>倍速中は方向入力の長押しを補正します。決定などを続けて押す場合は、一度ボタンを離してください。倍率は次回起動時も維持します。</p>
+<h2 id="map">5. 移動マップ</h2>
+<p>探索中に「移動」・F3・RTで開きます。階段の確認画面からも利用できます。城・キャンプ・戦闘中などでは利用できません。</p>
+<ul><li>十字キー／左スティック：座標を選択。</li><li>L／R：階層を変更（WindowsではQ／Wも使用可能）。</li><li>AndroidではX／Yで拡大・縮小、SELECTで全体表示。「全体」「区画」も利用できます。</li><li>決定で選択位置へ移動、取消で元の画面へ戻ります。決定・取消はAB交換を反映します。</li></ul>
+<p>未探索の場所も表示します。マップデータに存在するマスへ移動でき、イベント等による通行制限は受けません。移動前にはスロット1を上書き保存します。保存できなければ移動しません。元へ戻す場合はスロット1を読み込んでください。</p>
+<h2 id="effects">6. 常時効果と追加設定</h2>
+<p>機能メニューの「Always effects／常時効果」から灯り・ほご・しきべつ・ふゆうを個別に切り替えます。OFFにすると対象の効果と保存された残り時間を解除し、通常の状態へ戻します。その後は通常の呪文を使用できます。</p>
+<p>「MP: always 9 / no cost」はパーティの呪文回数を各段階9に維持します。OFFにすると本来の最大回数以内へ戻り、通常の消費を再開します。未習得の呪文を習得する設定ではありません。</p>
+<p>新規キャラクターの最大ボーナス、メーカー表示省略、善悪混合パーティ、CRT表示も機能メニューから設定します。常時効果などの設定は次回起動時も維持します。対応を確認した日本版ROMで使用できます。</p>
+<h2 id="edit">7. キャラクター編集</h2>
+<p>機能メニューの「Character edit／キャラクター編集」で開きます。酒場・訓練所などの施設や、迷宮の入力待ちで使用できます。戦闘中や画面切替中は利用できません。編集の間はゲームと音声を停止します。</p>
+<ol><li>対象のキャラクターを左右で選びます。日本語の名前・職業・属性を確認してください。</li><li>変更する値を選び、対応する実行項目で決定します。</li><li>保存完了後、続けて別の編集を実行できます。</li></ol>
+<table><tr><th>編集項目</th><th>内容</th></tr><tr><td>GOLD加算</td><td>加算額を選択して実行。保存可能な上限は999,999,999,999です。</td></tr><tr><td>経験値加算</td><td>現在の経験値から次の＋1・＋2・＋3段階目の必要経験値まで加算します。複数回実行できます。実際のレベルは変更しません。後から原作の宿屋でレベルアップします。</td></tr><tr><td>属性変更</td><td>善・中立・悪を選んで適用。種族・職業は維持します。酒場の加入候補は一覧を開き直して更新してください。</td></tr><tr><td>Learn all spells／全てのスペルを覚える</td><td>魔術師・僧侶の全段階を習得済みにします。MP・職業・レベルは変更しません。</td></tr><tr><td>Restore pre-edit game state／編集前へ戻す</td><td>直前の編集前のゲーム状態全体へ戻します。対象の数値以外の進行も、その時点へ戻ります。</td></tr></table>
+<p>編集内容は通常セーブにも反映します。編集前のバックアップは<code>States/&lt;ROM名&gt;.before-edit.wvs</code>です。編集ごとに上書きし、5つのステートスロットは変更しません。</p>
+<h2 id="files">8. 保存先・困ったとき</h2>
+<table><tr><th>環境</th><th>保存先</th></tr><tr><td>Windows</td><td><code>%APPDATA%\WiizV</code>（エクスプローラーのアドレス欄へ入力）</td></tr><tr><td>Android</td><td>起動時に選んだWiizVフォルダー（通常はDocuments/WiizV）</td></tr></table>
+<p><code>Saves</code>に通常セーブ、<code>States</code>にステート、<code>settings.ini</code>に設定を保存します。ROM名が<code>Wizardry5sfc.smc</code>の場合、通常セーブは<code>Wizardry5sfc.srm</code>です。保存データを引き継ぐ場合はROM名も揃えてください。同名で内容の異なるROMのデータは混用しません。</p>
+<ul><li>Windowsで起動しない：同梱DLLが実行ファイルと同じ場所にあるか確認します。書き込み可能な場合、エラーは実行ファイル横の<code>last-error.txt</code>へ記録します。</li><li>Androidで保存フォルダーへアクセスできない：起動画面で同じ保存フォルダーを選び直し、アクセスを許可します。</li><li>保存・編集できない：保存先のアクセス権と空き容量、編集可能な入力待ちの場面かを確認します。</li><li>ステートを読めない：同じROM向けのファイルか確認します。別ROM・未対応コア・破損データは読み込みません。</li></ul>
+<footer>詳細は同梱の「使用説明書.md」を参照してください。Snes9xとSDL3を使用しています。ライセンスとSnes9xのソース等はWindows/licensesおよびAPK内に収録しています。Snes9xには非商用利用の条件があります。ARM64実機・Procon実機での確認は未実施です。</footer>
+</main></html>

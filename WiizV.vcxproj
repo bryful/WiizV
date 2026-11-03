@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|x64"><Configuration>Debug</Configuration><Platform>x64</Platform></ProjectConfiguration>
+    <ProjectConfiguration Include="Release|x64"><Configuration>Release</Configuration><Platform>x64</Platform></ProjectConfiguration>
+  </ItemGroup>
+  <PropertyGroup Label="Globals"><ProjectGuid>{D05A8483-5401-4FE1-8272-01150248D242}</ProjectGuid><Keyword>Win32Proj</Keyword><RootNamespace>WiizV</RootNamespace><WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion></PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Label="Configuration"><ConfigurationType>Application</ConfigurationType><PlatformToolset>v145</PlatformToolset><CharacterSet>Unicode</CharacterSet></PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)'=='Debug'" Label="Configuration"><UseDebugLibraries>true</UseDebugLibraries></PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)'=='Release'" Label="Configuration"><UseDebugLibraries>false</UseDebugLibraries><WholeProgramOptimization>true</WholeProgramOptimization></PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <PropertyGroup Label="UserMacros" />
+  <PropertyGroup><PreferredToolArchitecture>x64</PreferredToolArchitecture></PropertyGroup>
+  <ItemDefinitionGroup>
+    <ClCompile><WarningLevel>Level4</WarningLevel><LanguageStandard>stdcpp20</LanguageStandard><AdditionalOptions>/utf-8 %(AdditionalOptions)</AdditionalOptions><PreprocessorDefinitions>UNICODE;_UNICODE;NOMINMAX;WIN32_LEAN_AND_MEAN;%(PreprocessorDefinitions)</PreprocessorDefinitions><AdditionalIncludeDirectories>$(ProjectDir)third_party\SDL3\include;$(ProjectDir)third_party\snes9x;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories><ExceptionHandling>Sync</ExceptionHandling></ClCompile>
+    <Link><SubSystem>Windows</SubSystem><AdditionalLibraryDirectories>$(ProjectDir)third_party\SDL3\lib\x64;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories><AdditionalDependencies>SDL3.lib;comdlg32.lib;shell32.lib;ole32.lib;bcrypt.lib;%(AdditionalDependencies)</AdditionalDependencies></Link>
+    <PostBuildEvent><Command>copy /Y "$(ProjectDir)third_party\SDL3\lib\x64\SDL3.dll" "$(OutDir)" || exit /b 1
+copy /Y "$(ProjectDir)third_party\snes9x\snes9x_libretro.dll" "$(OutDir)" || exit /b 1
+copy /Y "$(ProjectDir)third_party\snes9x\wiizv_snes9x.dll" "$(OutDir)" || exit /b 1
+if not exist "$(OutDir)Rom" mkdir "$(OutDir)Rom"
+if not exist "$(OutDir)licenses\snes9x" mkdir "$(OutDir)licenses\snes9x"
+copy /Y "$(ProjectDir)third_party\snes9x\*LICENSE*" "$(OutDir)licenses\snes9x\" || exit /b 1
+copy /Y "$(ProjectDir)third_party\snes9x\source.zip" "$(OutDir)licenses\snes9x\" || exit /b 1
+copy /Y "$(ProjectDir)third_party\snes9x\libretro.h" "$(OutDir)licenses\snes9x\" || exit /b 1
+copy /Y "$(ProjectDir)third_party\snes9x\wiizv_audio.inc" "$(OutDir)licenses\snes9x\" || exit /b 1
+copy /Y "$(ProjectDir)third_party\snes9x\wiizv_audio_cpu.inc" "$(OutDir)licenses\snes9x\" || exit /b 1
+copy /Y "$(ProjectDir)third_party\snes9x\wiizv_movement.inc" "$(OutDir)licenses\snes9x\" || exit /b 1
+copy /Y "$(ProjectDir)third_party\snes9x\wiizv_effects.inc" "$(OutDir)licenses\snes9x\" || exit /b 1
+copy /Y "$(ProjectDir)third_party\snes9x\wiizv_character.inc" "$(OutDir)licenses\snes9x\" || exit /b 1
+copy /Y "$(ProjectDir)third_party\snes9x\wiizv_character_data.h" "$(OutDir)licenses\snes9x\" || exit /b 1
+copy /Y "$(ProjectDir)third_party\snes9x\wiizv_linkage.h" "$(OutDir)licenses\snes9x\" || exit /b 1
+copy /Y "$(ProjectDir)tools\prepare-core.ps1" "$(OutDir)licenses\snes9x\" || exit /b 1
+copy /Y "$(ProjectDir)tools\build-core.ps1" "$(OutDir)licenses\snes9x\" || exit /b 1
+copy /Y "$(ProjectDir)third_party\PROVENANCE.md" "$(OutDir)licenses\" || exit /b 1
+copy /Y "$(ProjectDir)third_party\SDL3\LICENSE.txt" "$(OutDir)licenses\SDL3.txt" || exit /b 1
+copy /Y "$(ProjectDir)README.md" "$(OutDir)" || exit /b 1</Command></PostBuildEvent>
+  </ItemDefinitionGroup>
+  <ItemGroup><ClCompile Include="app\main.cpp" /></ItemGroup>
+  <ItemGroup><ClInclude Include="tests\effects_checks.h" /></ItemGroup>
+  <ItemGroup><ClInclude Include="tests\mp_checks.h" /></ItemGroup>
+  <ItemGroup><ClInclude Include="app\crt_filter.h" /><ClInclude Include="tests\crt_checks.h" /></ItemGroup>
+  <ItemGroup><ClInclude Include="third_party\snes9x\wiizv_character_data.h" /><ClInclude Include="tests\gold_checks.h" /><ClInclude Include="tests\experience_checks.h" /><ClInclude Include="tests\character_alignment_checks.h" /></ItemGroup>
+  <ItemGroup><ClInclude Include="app\state_file.h" /><ClInclude Include="app\input_repeat.h" /><ClInclude Include="app\playback_speed.h" /><ClInclude Include="app\dungeon_map.h" /><ClInclude Include="tests\state_checks.h" /><ClInclude Include="tests\speed_checks.h" /><ClInclude Include="tests\input_checks.h" /><ClInclude Include="tests\movement_checks.h" /></ItemGroup>
+  <ItemGroup><ResourceCompile Include="app\wiizv.rc" /></ItemGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+</Project>

@@ -1,0 +1,1026 @@
+{
+  "00": [
+    "brk",
+    "immediate"
+  ],
+  "01": [
+    "ora",
+    "indexedIndirectX"
+  ],
+  "02": [
+    "cop",
+    "immediate"
+  ],
+  "03": [
+    "ora",
+    "stack"
+  ],
+  "04": [
+    "tsb",
+    "direct"
+  ],
+  "05": [
+    "ora",
+    "direct"
+  ],
+  "06": [
+    "asl",
+    "direct"
+  ],
+  "07": [
+    "ora",
+    "indirectLong"
+  ],
+  "08": [
+    "php",
+    "implied"
+  ],
+  "09": [
+    "ora",
+    "immediateA"
+  ],
+  "0a": [
+    "asl",
+    "implied"
+  ],
+  "0b": [
+    "phd",
+    "implied"
+  ],
+  "0c": [
+    "tsb",
+    "absolute"
+  ],
+  "0d": [
+    "ora",
+    "absolute"
+  ],
+  "0e": [
+    "asl",
+    "absolute"
+  ],
+  "0f": [
+    "ora",
+    "absoluteLong"
+  ],
+  "10": [
+    "bpl",
+    "relative"
+  ],
+  "11": [
+    "ora",
+    "indirectIndexedY"
+  ],
+  "12": [
+    "ora",
+    "indirect"
+  ],
+  "13": [
+    "ora",
+    "stackIndirect"
+  ],
+  "14": [
+    "trb",
+    "direct"
+  ],
+  "15": [
+    "ora",
+    "directX"
+  ],
+  "16": [
+    "asl",
+    "directX"
+  ],
+  "17": [
+    "ora",
+    "indirectLongY"
+  ],
+  "18": [
+    "clc",
+    "implied"
+  ],
+  "19": [
+    "ora",
+    "absoluteY"
+  ],
+  "1a": [
+    "inc",
+    "implied"
+  ],
+  "1b": [
+    "tas",
+    "implied"
+  ],
+  "1c": [
+    "trb",
+    "absolute"
+  ],
+  "1d": [
+    "ora",
+    "absoluteX"
+  ],
+  "1e": [
+    "asl",
+    "absoluteX"
+  ],
+  "1f": [
+    "ora",
+    "absoluteLongX"
+  ],
+  "20": [
+    "jsr",
+    "absolutePC"
+  ],
+  "21": [
+    "and",
+    "indexedIndirectX"
+  ],
+  "22": [
+    "jsl",
+    "absoluteLong"
+  ],
+  "23": [
+    "and",
+    "stack"
+  ],
+  "24": [
+    "bit",
+    "direct"
+  ],
+  "25": [
+    "and",
+    "direct"
+  ],
+  "26": [
+    "rol",
+    "direct"
+  ],
+  "27": [
+    "and",
+    "indirectLong"
+  ],
+  "28": [
+    "plp",
+    "implied"
+  ],
+  "29": [
+    "and",
+    "immediateA"
+  ],
+  "2a": [
+    "rol",
+    "implied"
+  ],
+  "2b": [
+    "pld",
+    "implied"
+  ],
+  "2c": [
+    "bit",
+    "absolute"
+  ],
+  "2d": [
+    "and",
+    "absolute"
+  ],
+  "2e": [
+    "rol",
+    "absolute"
+  ],
+  "2f": [
+    "and",
+    "absoluteLong"
+  ],
+  "30": [
+    "bmi",
+    "relative"
+  ],
+  "31": [
+    "and",
+    "indirectIndexedY"
+  ],
+  "32": [
+    "and",
+    "indirect"
+  ],
+  "33": [
+    "and",
+    "stackIndirect"
+  ],
+  "34": [
+    "bit",
+    "directX"
+  ],
+  "35": [
+    "and",
+    "directX"
+  ],
+  "36": [
+    "rol",
+    "directX"
+  ],
+  "37": [
+    "and",
+    "indirectLongY"
+  ],
+  "38": [
+    "sec",
+    "implied"
+  ],
+  "39": [
+    "and",
+    "absoluteY"
+  ],
+  "3a": [
+    "dec",
+    "implied"
+  ],
+  "3b": [
+    "tsa",
+    "implied"
+  ],
+  "3c": [
+    "bit",
+    "absoluteX"
+  ],
+  "3d": [
+    "and",
+    "absoluteX"
+  ],
+  "3e": [
+    "rol",
+    "absoluteX"
+  ],
+  "3f": [
+    "and",
+    "absoluteLongX"
+  ],
+  "40": [
+    "rti",
+    "implied"
+  ],
+  "41": [
+    "eor",
+    "indexedIndirectX"
+  ],
+  "42": [
+    "wdm",
+    "immediate"
+  ],
+  "43": [
+    "eor",
+    "stack"
+  ],
+  "44": [
+    "mvp",
+    "move"
+  ],
+  "45": [
+    "eor",
+    "direct"
+  ],
+  "46": [
+    "lsr",
+    "direct"
+  ],
+  "47": [
+    "eor",
+    "indirectLong"
+  ],
+  "48": [
+    "pha",
+    "implied"
+  ],
+  "49": [
+    "eor",
+    "immediateA"
+  ],
+  "4a": [
+    "lsr",
+    "implied"
+  ],
+  "4b": [
+    "phk",
+    "implied"
+  ],
+  "4c": [
+    "jmp",
+    "absolutePC"
+  ],
+  "4d": [
+    "eor",
+    "absolute"
+  ],
+  "4e": [
+    "lsr",
+    "absolute"
+  ],
+  "4f": [
+    "eor",
+    "absoluteLong"
+  ],
+  "50": [
+    "bvc",
+    "relative"
+  ],
+  "51": [
+    "eor",
+    "indirectIndexedY"
+  ],
+  "52": [
+    "eor",
+    "indirect"
+  ],
+  "53": [
+    "eor",
+    "stackIndirect"
+  ],
+  "54": [
+    "mvn",
+    "move"
+  ],
+  "55": [
+    "eor",
+    "directX"
+  ],
+  "56": [
+    "lsr",
+    "directX"
+  ],
+  "57": [
+    "eor",
+    "indirectLongY"
+  ],
+  "58": [
+    "cli",
+    "implied"
+  ],
+  "59": [
+    "eor",
+    "absoluteY"
+  ],
+  "5a": [
+    "phy",
+    "implied"
+  ],
+  "5b": [
+    "tad",
+    "implied"
+  ],
+  "5c": [
+    "jml",
+    "absoluteLong"
+  ],
+  "5d": [
+    "eor",
+    "absoluteX"
+  ],
+  "5e": [
+    "lsr",
+    "absoluteX"
+  ],
+  "5f": [
+    "eor",
+    "absoluteLongX"
+  ],
+  "60": [
+    "rts",
+    "implied"
+  ],
+  "61": [
+    "adc",
+    "indexedIndirectX"
+  ],
+  "62": [
+    "per",
+    "relativeWord"
+  ],
+  "63": [
+    "adc",
+    "stack"
+  ],
+  "64": [
+    "stz",
+    "direct"
+  ],
+  "65": [
+    "adc",
+    "direct"
+  ],
+  "66": [
+    "ror",
+    "direct"
+  ],
+  "67": [
+    "adc",
+    "indirectLong"
+  ],
+  "68": [
+    "pla",
+    "implied"
+  ],
+  "69": [
+    "adc",
+    "immediateA"
+  ],
+  "6a": [
+    "ror",
+    "implied"
+  ],
+  "6b": [
+    "rtl",
+    "implied"
+  ],
+  "6c": [
+    "jmp",
+    "indirectPC"
+  ],
+  "6d": [
+    "adc",
+    "absolute"
+  ],
+  "6e": [
+    "ror",
+    "absolute"
+  ],
+  "6f": [
+    "adc",
+    "absoluteLong"
+  ],
+  "70": [
+    "bvs",
+    "relative"
+  ],
+  "71": [
+    "adc",
+    "indirectIndexedY"
+  ],
+  "72": [
+    "adc",
+    "indirect"
+  ],
+  "73": [
+    "adc",
+    "stackIndirect"
+  ],
+  "74": [
+    "stz",
+    "directX"
+  ],
+  "75": [
+    "adc",
+    "absoluteX"
+  ],
+  "76": [
+    "ror",
+    "absoluteX"
+  ],
+  "77": [
+    "adc",
+    "indirectLongY"
+  ],
+  "78": [
+    "sei",
+    "implied"
+  ],
+  "79": [
+    "adc",
+    "absoluteY"
+  ],
+  "7a": [
+    "ply",
+    "implied"
+  ],
+  "7b": [
+    "tda",
+    "implied"
+  ],
+  "7c": [
+    "jmp",
+    "indirectX"
+  ],
+  "7d": [
+    "adc",
+    "absoluteX"
+  ],
+  "7e": [
+    "ror",
+    "absoluteX"
+  ],
+  "7f": [
+    "adc",
+    "absoluteLongX"
+  ],
+  "80": [
+    "bra",
+    "relative"
+  ],
+  "81": [
+    "sta",
+    "indexedIndirectX"
+  ],
+  "82": [
+    "brl",
+    "relativeWord"
+  ],
+  "83": [
+    "sta",
+    "stack"
+  ],
+  "84": [
+    "sty",
+    "direct"
+  ],
+  "85": [
+    "sta",
+    "direct"
+  ],
+  "86": [
+    "stx",
+    "direct"
+  ],
+  "87": [
+    "sta",
+    "indirectLong"
+  ],
+  "88": [
+    "dey",
+    "implied"
+  ],
+  "89": [
+    "bit",
+    "immediateA"
+  ],
+  "8a": [
+    "txa",
+    "implied"
+  ],
+  "8b": [
+    "phb",
+    "implied"
+  ],
+  "8c": [
+    "sty",
+    "absolute"
+  ],
+  "8d": [
+    "sta",
+    "absolute"
+  ],
+  "8e": [
+    "stx",
+    "absolute"
+  ],
+  "8f": [
+    "sta",
+    "absoluteLong"
+  ],
+  "90": [
+    "bcc",
+    "relative"
+  ],
+  "91": [
+    "sta",
+    "indirectIndexedY"
+  ],
+  "92": [
+    "sta",
+    "indirect"
+  ],
+  "93": [
+    "sta",
+    "stackIndirect"
+  ],
+  "94": [
+    "sty",
+    "directX"
+  ],
+  "95": [
+    "sta",
+    "directX"
+  ],
+  "96": [
+    "stx",
+    "directY"
+  ],
+  "97": [
+    "sta",
+    "indirectLongY"
+  ],
+  "98": [
+    "tya",
+    "implied"
+  ],
+  "99": [
+    "sta",
+    "absoluteY"
+  ],
+  "9a": [
+    "txs",
+    "implied"
+  ],
+  "9b": [
+    "txy",
+    "implied"
+  ],
+  "9c": [
+    "stz",
+    "absolute"
+  ],
+  "9d": [
+    "sta",
+    "absoluteX"
+  ],
+  "9e": [
+    "stz",
+    "absoluteX"
+  ],
+  "9f": [
+    "sta",
+    "absoluteLongX"
+  ],
+  "a0": [
+    "ldy",
+    "immediateX"
+  ],
+  "a1": [
+    "lda",
+    "indexedIndirectX"
+  ],
+  "a2": [
+    "ldx",
+    "immediateX"
+  ],
+  "a3": [
+    "lda",
+    "stack"
+  ],
+  "a4": [
+    "ldy",
+    "direct"
+  ],
+  "a5": [
+    "lda",
+    "direct"
+  ],
+  "a6": [
+    "ldx",
+    "direct"
+  ],
+  "a7": [
+    "lda",
+    "indirectLong"
+  ],
+  "a8": [
+    "tay",
+    "implied"
+  ],
+  "a9": [
+    "lda",
+    "immediateA"
+  ],
+  "aa": [
+    "tax",
+    "implied"
+  ],
+  "ab": [
+    "plb",
+    "implied"
+  ],
+  "ac": [
+    "ldy",
+    "absolute"
+  ],
+  "ad": [
+    "lda",
+    "absolute"
+  ],
+  "ae": [
+    "ldx",
+    "absolute"
+  ],
+  "af": [
+    "lda",
+    "absoluteLong"
+  ],
+  "b0": [
+    "bcs",
+    "relative"
+  ],
+  "b1": [
+    "lda",
+    "indirectIndexedY"
+  ],
+  "b2": [
+    "lda",
+    "indirect"
+  ],
+  "b3": [
+    "lda",
+    "stackIndirect"
+  ],
+  "b4": [
+    "ldy",
+    "directX"
+  ],
+  "b5": [
+    "lda",
+    "directX"
+  ],
+  "b6": [
+    "ldx",
+    "directY"
+  ],
+  "b7": [
+    "lda",
+    "indirectLongY"
+  ],
+  "b8": [
+    "clv",
+    "implied"
+  ],
+  "b9": [
+    "lda",
+    "absoluteY"
+  ],
+  "ba": [
+    "tsx",
+    "implied"
+  ],
+  "bb": [
+    "tyx",
+    "implied"
+  ],
+  "bc": [
+    "ldy",
+    "absoluteX"
+  ],
+  "bd": [
+    "lda",
+    "absoluteX"
+  ],
+  "be": [
+    "ldx",
+    "absoluteY"
+  ],
+  "bf": [
+    "lda",
+    "absoluteLongX"
+  ],
+  "c0": [
+    "cpy",
+    "immediateX"
+  ],
+  "c1": [
+    "cmp",
+    "indexedIndirectX"
+  ],
+  "c2": [
+    "rep",
+    "immediate"
+  ],
+  "c3": [
+    "cmp",
+    "stack"
+  ],
+  "c4": [
+    "cpy",
+    "direct"
+  ],
+  "c5": [
+    "cmp",
+    "direct"
+  ],
+  "c6": [
+    "dec",
+    "direct"
+  ],
+  "c7": [
+    "cmp",
+    "indirectLong"
+  ],
+  "c8": [
+    "iny",
+    "implied"
+  ],
+  "c9": [
+    "cmp",
+    "immediateA"
+  ],
+  "ca": [
+    "dex",
+    "implied"
+  ],
+  "cb": [
+    "wai",
+    "implied"
+  ],
+  "cc": [
+    "cpy",
+    "absolute"
+  ],
+  "cd": [
+    "cmp",
+    "absolute"
+  ],
+  "ce": [
+    "dec",
+    "absolute"
+  ],
+  "cf": [
+    "cmp",
+    "absoluteLong"
+  ],
+  "d0": [
+    "bne",
+    "relative"
+  ],
+  "d1": [
+    "cmp",
+    "indirectIndexedY"
+  ],
+  "d2": [
+    "cmp",
+    "indirect"
+  ],
+  "d3": [
+    "cmp",
+    "stackIndirect"
+  ],
+  "d4": [
+    "pei",
+    "indirect"
+  ],
+  "d5": [
+    "cmp",
+    "directX"
+  ],
+  "d6": [
+    "dec",
+    "directX"
+  ],
+  "d7": [
+    "cmp",
+    "indirectLongY"
+  ],
+  "d8": [
+    "cld",
+    "implied"
+  ],
+  "d9": [
+    "cmp",
+    "absoluteY"
+  ],
+  "da": [
+    "phx",
+    "implied"
+  ],
+  "db": [
+    "stp",
+    "implied"
+  ],
+  "dc": [
+    "jmp",
+    "indirectLongPC"
+  ],
+  "dd": [
+    "cmp",
+    "absoluteX"
+  ],
+  "de": [
+    "dec",
+    "absoluteX"
+  ],
+  "df": [
+    "cmp",
+    "absoluteLongX"
+  ],
+  "e0": [
+    "cpx",
+    "immediateX"
+  ],
+  "e1": [
+    "sbc",
+    "indexedIndirectX"
+  ],
+  "e2": [
+    "sep",
+    "immediate"
+  ],
+  "e3": [
+    "sbc",
+    "stack"
+  ],
+  "e4": [
+    "cpx",
+    "direct"
+  ],
+  "e5": [
+    "sbc",
+    "direct"
+  ],
+  "e6": [
+    "inc",
+    "direct"
+  ],
+  "e7": [
+    "sbc",
+    "indirectLong"
+  ],
+  "e8": [
+    "inx",
+    "implied"
+  ],
+  "e9": [
+    "sbc",
+    "immediateA"
+  ],
+  "ea": [
+    "nop",
+    "implied"
+  ],
+  "eb": [
+    "xba",
+    "implied"
+  ],
+  "ec": [
+    "cpx",
+    "absolute"
+  ],
+  "ed": [
+    "sbc",
+    "absolute"
+  ],
+  "ee": [
+    "inc",
+    "absolute"
+  ],
+  "ef": [
+    "sbc",
+    "absoluteLong"
+  ],
+  "f0": [
+    "beq",
+    "relative"
+  ],
+  "f1": [
+    "sbc",
+    "indirectIndexedY"
+  ],
+  "f2": [
+    "sbc",
+    "indirect"
+  ],
+  "f3": [
+    "sbc",
+    "stackIndirect"
+  ],
+  "f4": [
+    "pea",
+    "absolute"
+  ],
+  "f5": [
+    "sbc",
+    "directX"
+  ],
+  "f6": [
+    "inc",
+    "directX"
+  ],
+  "f7": [
+    "sbc",
+    "indirectLongY"
+  ],
+  "f8": [
+    "sed",
+    "implied"
+  ],
+  "f9": [
+    "sbc",
+    "absoluteY"
+  ],
+  "fa": [
+    "plx",
+    "implied"
+  ],
+  "fb": [
+    "xce",
+    "implied"
+  ],
+  "fc": [
+    "jsr",
+    "indirectX"
+  ],
+  "fd": [
+    "sbc",
+    "absoluteX"
+  ],
+  "fe": [
+    "inc",
+    "absoluteX"
+  ],
+  "ff": [
+    "sbc",
+    "absoluteLongX"
+  ]
+}
