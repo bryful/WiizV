@@ -135,6 +135,10 @@ public final class GameActivity extends SDLActivity {
             toggle(items,"bonus","新規キャラクター ボーナス最大",flags[3]!=0,"bonus");
             toggle(items,"logo","メーカーロゴをスキップ",flags[4]!=0,"logo");
             toggle(items,"mixed","酒場で善悪混合を許可",flags[5]!=0,"mixed");
+            int reward = flags[11];
+            String rewardLabel = reward < 0 ? "未対応" : reward == 0 ? "OFF" : (1 << reward) + "倍";
+            add(items, "battleReward", "戦闘報酬倍率（経験値・GOLD）  " + rewardLabel, reward >= 0,
+                () -> send("battle_reward 1"), direction -> send("battle_reward " + direction));
             toggle(items,"crt","CRT表示",flags[6]!=0,"crt");
             String[] effects={"あかり LOMILWA","ほご MAPORFIC","しきべつ LATUMAPIC","ふゆう LITOFEITO","MP9 / 呪文消費なし"};
             for(int i=0;i<effects.length;++i)toggle(items,"effect"+i,effects[i],(flags[7]&(1<<i))!=0,"effect "+i);

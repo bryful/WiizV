@@ -11,7 +11,7 @@ Windows版
   通常セーブ・設定は %APPDATA%\WiizV に保存します。
 
 Android版
-  Android\WiizV-0.2.4-release.apk を端末へコピーしてインストールします。
+  Android\WiizV-0.2.5-release.apk を端末へコピーしてインストールします。
   Android 6以降のARM64端末向けです。x86_64にも対応します。
   WiizV専用のRelease鍵で署名した配布版です。
   旧debug版からは上書きできません。先にDocuments/WiizV全体を別の場所へ

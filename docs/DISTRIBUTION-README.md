@@ -14,7 +14,7 @@ ROM・ゲーム画像・音楽・セーブデータ・署名用の秘密鍵は�
 - **Windows**：`Windows/WiizV.exe`を起動します。DLL・licensesも一緒に配置してください。
   必要なMicrosoft Visual C++ v14ランタイム（x64）が未導入の場合は、
   [Microsoft公式案内](https://learn.microsoft.com/en-us/cpp/windows/latest-supported-vc-redist/)から導入してください。
-- **Android**：[WiizV-0.2.4-release.apk](Android/WiizV-0.2.4-release.apk)を端末へコピーしてインストールします。
+- **Android**：[WiizV-0.2.5-release.apk](Android/WiizV-0.2.5-release.apk)を端末へコピーしてインストールします。
   起動後にDocumentsまたはDocuments/WiizVを選び、保存先へのアクセスを許可してROMを選択します。
   旧debug署名版から初めて移行する場合は上書きできません。
   保存フォルダー全体を別の場所へ控え、旧アプリをアンインストールしてから導入し、同じ保存フォルダーを選び直してください。

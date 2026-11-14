@@ -165,6 +165,7 @@ struct Core
     bool (__cdecl* set_max_bonus)(bool) = nullptr;
     bool (__cdecl* set_skip_logo)(bool) = nullptr;
     bool (__cdecl* set_mixed_alignment)(bool) = nullptr;
+    bool (__cdecl* set_reward_multiplier)(unsigned) = nullptr;
     bool (__cdecl* can_edit_character)() = nullptr;
     bool (__cdecl* request_gold)(unsigned, uint64_t) = nullptr;
     bool (__cdecl* request_experience)(unsigned, unsigned) = nullptr;
@@ -221,6 +222,7 @@ struct Core
         set_max_bonus = reinterpret_cast<decltype(set_max_bonus)>(GetProcAddress(module, "wiizv_set_max_bonus"));
         set_skip_logo = reinterpret_cast<decltype(set_skip_logo)>(GetProcAddress(module, "wiizv_set_skip_logo"));
         set_mixed_alignment = reinterpret_cast<decltype(set_mixed_alignment)>(GetProcAddress(module, "wiizv_set_mixed_alignment"));
+        set_reward_multiplier = reinterpret_cast<decltype(set_reward_multiplier)>(GetProcAddress(module, "wiizv_set_reward_multiplier"));
         can_edit_character = reinterpret_cast<decltype(can_edit_character)>(GetProcAddress(module, "wiizv_can_edit_character"));
         request_gold = reinterpret_cast<decltype(request_gold)>(GetProcAddress(module, "wiizv_request_gold"));
         request_experience = reinterpret_cast<decltype(request_experience)>(GetProcAddress(module, "wiizv_request_experience"));
@@ -294,6 +296,9 @@ struct Player
     bool maximumBonus = false;
     bool skipMakerLogo = false;
     bool mixedAlignment = false;
+    static constexpr int REWARD_MULTIPLIER_STEPS = 9;
+    static constexpr int REWARD_MENU_ROW = 13;
+    int rewardMultiplierIndex = 0;
     bool crtDisplay = false;
     CrtFilter crtFilter;
     unsigned effectMask = 0;
@@ -371,6 +376,7 @@ struct Player
         text += std::string("maximum_bonus=") + (maximumBonus ? "1\n" : "0\n");
         text += std::string("skip_maker_logo=") + (skipMakerLogo ? "1\n" : "0\n");
         text += std::string("mixed_alignment=") + (mixedAlignment ? "1\n" : "0\n");
+        text += "battle_reward_multiplier=" + std::to_string(1u << rewardMultiplierIndex) + "\n";
         text += std::string("crt_display=") + (crtDisplay ? "1\n" : "0\n");
         writeFile(dataDirectory / L"settings.ini", text.data(), text.size());
     }
@@ -386,6 +392,8 @@ struct Player
         if (core.set_max_bonus) require(core.set_max_bonus(maximumBonus && supportsEffects()), "ボーナス最大化を設定できません。");
         if (core.set_skip_logo) require(core.set_skip_logo(skipMakerLogo && supportsEffects()), "ロゴスキップを設定できません。");
         if (core.set_mixed_alignment) require(core.set_mixed_alignment(mixedAlignment && supportsEffects()), "善悪混合設定を適用できません。");
+        if (core.set_reward_multiplier)
+            require(core.set_reward_multiplier(supportsEffects() ? 1u << rewardMultiplierIndex : 1u), "戦闘報酬倍率を設定できません。");
     }
 
     void runFrame()
@@ -446,8 +454,27 @@ struct Player
         showNotice(crtDisplay ? "CRT display: ON" : "CRT display: OFF");
     }
 
-    int menuRows() const { return characterMenu ? 10 : effectsMenu ? static_cast<int>(EFFECT_KEYS.size()) + 1 : 14; }
-    int menuRowHeight() const { return characterMenu || effectsMenu ? 32 : 24; }
+    bool supportsBattleRewards() const { return supportsEffects() && core.set_reward_multiplier; }
+
+    void changeBattleRewardMultiplier(int direction)
+    {
+        require(supportsBattleRewards(), "このROMまたはコアは戦闘報酬倍率に対応していません。");
+        const int previous = rewardMultiplierIndex;
+        rewardMultiplierIndex = (previous + direction + REWARD_MULTIPLIER_STEPS) % REWARD_MULTIPLIER_STEPS;
+        try { saveSettings(); }
+        catch (...) { rewardMultiplierIndex = previous; throw; }
+        refreshEffects();
+    }
+
+    void changeMenuChoice(int direction)
+    {
+        if (characterMenu) changeCharacterChoice(direction);
+        else if (!effectsMenu && menuRow == REWARD_MENU_ROW) changeBattleRewardMultiplier(direction);
+        else menuLoad = direction > 0;
+    }
+
+    int menuRows() const { return characterMenu ? 10 : effectsMenu ? static_cast<int>(EFFECT_KEYS.size()) + 1 : 15; }
+    int menuRowHeight() const { return characterMenu || effectsMenu ? 32 : 22; }
 
     void toggleButtons()
     {
@@ -615,6 +642,7 @@ struct Player
         else if (menuRow == 10) toggleMixedAlignment();
         else if (menuRow == 11) toggleCrtDisplay();
         else if (menuRow == 12) openCharacterMenu();
+        else if (menuRow == REWARD_MENU_ROW) changeBattleRewardMultiplier(1);
         else toggleMenu();
     }
 
@@ -1150,7 +1178,10 @@ struct Player
                         row == 9 ? std::string("Skip maker logo: ") + (skipMakerLogo ? "ON" : "OFF") :
                         row == 10 ? std::string("Mixed alignment party: ") + (mixedAlignment ? "ON" : "OFF") :
                         row == 11 ? std::string("CRT display: ") + (crtDisplay ? "ON" : "OFF") :
-                        row == 12 ? std::string("Character edit >") : std::string("Resume");
+                        row == 12 ? std::string("Character edit >") :
+                        row == REWARD_MENU_ROW ? std::string("Battle EXP / GOLD: ") +
+                            (!supportsBattleRewards() ? "Unavailable" : rewardMultiplierIndex == 0 ? "OFF" :
+                                "x" + std::to_string(1u << rewardMultiplierIndex)) : std::string("Resume");
                     sdlCheck(SDL_RenderDebugText(renderer, box.x + 24, y, label.c_str()));
                 }
             }
@@ -1543,8 +1574,8 @@ bool handleAction(Player& session, const SDL_Event& event)
         {
             if (key == SDL_SCANCODE_UP) session.menuRow = (session.menuRow + session.menuRows() - 1) % session.menuRows();
             if (key == SDL_SCANCODE_DOWN) session.menuRow = (session.menuRow + 1) % session.menuRows();
-            if (key == SDL_SCANCODE_LEFT) { if (session.characterMenu) session.changeCharacterChoice(-1); else session.menuLoad = false; }
-            if (key == SDL_SCANCODE_RIGHT) { if (session.characterMenu) session.changeCharacterChoice(1); else session.menuLoad = true; }
+            if (key == SDL_SCANCODE_LEFT) session.changeMenuChoice(-1);
+            if (key == SDL_SCANCODE_RIGHT) session.changeMenuChoice(1);
             if (!session.effectsMenu && !session.characterMenu && session.menuRow < 5) session.selectedSlot = session.menuRow + 1;
             if (key == SDL_SCANCODE_RETURN) session.activateMenu();
             return true;
@@ -1559,8 +1590,8 @@ bool handleAction(Player& session, const SDL_Event& event)
         {
             if (button == SDL_GAMEPAD_BUTTON_DPAD_UP) session.menuRow = (session.menuRow + session.menuRows() - 1) % session.menuRows();
             if (button == SDL_GAMEPAD_BUTTON_DPAD_DOWN) session.menuRow = (session.menuRow + 1) % session.menuRows();
-            if (button == SDL_GAMEPAD_BUTTON_DPAD_LEFT) { if (session.characterMenu) session.changeCharacterChoice(-1); else session.menuLoad = false; }
-            if (button == SDL_GAMEPAD_BUTTON_DPAD_RIGHT) { if (session.characterMenu) session.changeCharacterChoice(1); else session.menuLoad = true; }
+            if (button == SDL_GAMEPAD_BUTTON_DPAD_LEFT) session.changeMenuChoice(-1);
+            if (button == SDL_GAMEPAD_BUTTON_DPAD_RIGHT) session.changeMenuChoice(1);
             if (!session.effectsMenu && !session.characterMenu && session.menuRow < 5) session.selectedSlot = session.menuRow + 1;
             if (button == (session.swapButtons ? SDL_GAMEPAD_BUTTON_SOUTH : SDL_GAMEPAD_BUTTON_EAST)) session.activateMenu();
             if (button == (session.swapButtons ? SDL_GAMEPAD_BUTTON_EAST : SDL_GAMEPAD_BUTTON_SOUTH))
@@ -1796,6 +1827,8 @@ int run(const std::vector<std::wstring>& args)
             if (line == "maximum_bonus=1") session.maximumBonus = true;
             if (line == "skip_maker_logo=1") session.skipMakerLogo = true;
             if (line == "mixed_alignment=1") session.mixedAlignment = true;
+            for (int index = 0; index < Player::REWARD_MULTIPLIER_STEPS; ++index)
+                if (line == "battle_reward_multiplier=" + std::to_string(1u << index)) session.rewardMultiplierIndex = index;
             if (line == "crt_display=1") session.crtDisplay = true;
             for (unsigned effect = 0; effect < Player::EFFECT_KEYS.size(); ++effect)
                 if (line == std::string(Player::EFFECT_KEYS[effect]) + "=1") session.effectMask |= 1u << effect;

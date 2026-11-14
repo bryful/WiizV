@@ -1,7 +1,41 @@
+#include "wiizv_character_data.h"
+
 static unsigned wiizvEffectMask = 0;
+static unsigned wiizvRewardMultiplier = 1;
 static bool wiizvMaximumBonus = false;
 static bool wiizvSkipMakerLogo = false;
 static bool wiizvMixedAlignment = false;
+
+extern "C" WIIZV_EXPORT bool wiizv_set_reward_multiplier(unsigned multiplier)
+{
+    if (multiplier == 0 || multiplier > 256 || (multiplier & (multiplier - 1))) return false;
+    if (multiplier != 1 && Memory.ROMCRC32 != 0x547cf7b9) return false;
+    wiizvRewardMultiplier = multiplier;
+    return true;
+}
+
+static inline void wiizvBattleRewardHook()
+{
+    if (wiizvRewardMultiplier == 1 || Memory.ROMCRC32 != 0x547cf7b9 || Registers.D.W) return;
+    switch (Registers.PBPC)
+    {
+    case 0x05b4a1: // 勝利時の経験値を配分する直前。
+    case 0x04c65a: // 戦闘後の宝箱から得たGOLDを配分する直前。
+    {
+        auto* reward = Memory.RAM + 0x28;
+        std::uint64_t value;
+        if (!characterData::readDecimal(reward, 6, value)) break;
+        value *= wiizvRewardMultiplier;
+        constexpr auto maximum = characterData::MAX_GOLD;
+        characterData::writeDecimal(reward, 6, value > maximum ? maximum : value);
+        break;
+    }
+    case 0x04c6ae: // 最上位桁の加算直後。桁あふれした所持GOLDを補正する。
+        if (CheckCarry())
+            characterData::writeGold(Memory.RAM + Registers.X.W, characterData::MAX_GOLD);
+        break;
+    }
+}
 
 extern "C" WIIZV_EXPORT bool wiizv_set_mixed_alignment(bool enabled)
 {
@@ -133,6 +167,7 @@ extern "C" WIIZV_EXPORT bool wiizv_set_effects(unsigned mask)
 
 static inline void wiizvEffectsHook()
 {
+    wiizvBattleRewardHook();
     wiizvTavernHook();
     // 初期化と起動済みマーカーの記録は残し、ロゴ表示とその待機だけを省く。
     if (wiizvSkipMakerLogo && Memory.ROMCRC32 == 0x547cf7b9)

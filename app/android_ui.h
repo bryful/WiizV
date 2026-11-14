@@ -43,7 +43,8 @@ inline void androidMenu(Player& session)
     std::ostringstream text;
     text << androidMenuPage << '|' << session.speedIndex << '|' << session.swapButtons << '|' << session.maximumBonus << '|'
         << session.skipMakerLogo << '|' << session.mixedAlignment << '|' << session.crtDisplay << '|' << session.effectMask << '|'
-        << slots << '|' << (session.core.can_edit_character && session.core.can_edit_character()) << '|' << androidMenuSerial << '\n';
+        << slots << '|' << (session.core.can_edit_character && session.core.can_edit_character()) << '|' << androidMenuSerial
+        << '|' << (session.supportsBattleRewards() ? session.rewardMultiplierIndex : -1) << '\n';
     const auto* vram = static_cast<const uint8_t*>(session.core.get_memory_data(RETRO_MEMORY_VIDEO_RAM));
     for (unsigned character : session.registeredCharacters())
     {
@@ -192,6 +193,10 @@ inline bool androidEvent(Player& session, const SDL_Event& event)
         else if (action == "bonus") session.toggleMaximumBonus();
         else if (action == "logo") session.toggleSkipMakerLogo();
         else if (action == "mixed") session.toggleMixedAlignment();
+        else if (action == "battle_reward") {
+            require(first == -1 || first == 1, "倍率の変更方向が不正です。");
+            session.changeBattleRewardMultiplier(first);
+        }
         else if (action == "crt") session.toggleCrtDisplay();
         else if (action == "effect") { require(first >= 0 && first < 5, "効果が不正です。"); session.toggleEffect(static_cast<unsigned>(first)); }
         else if (action == "character") { session.openCharacterMenu(); androidMenuPage = 1; }
