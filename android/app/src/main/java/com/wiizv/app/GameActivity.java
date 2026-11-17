@@ -19,6 +19,9 @@ public final class GameActivity extends SDLActivity {
     private PadMenuDialog menu;
     private int page,serial,closedSerial=-1,selectedActor=0,goldStep=4,experienceSteps=1,alignment=0;
     private static final String[] ALIGNMENTS={"善 Good","中立 Neutral","悪 Evil","不明"};
+    private static final String[] RACES={"人間","エルフ","ドワーフ","ノーム","ホビット"};
+    private static final String[] CLASSES={"戦士","魔術師","僧侶","盗賊","ビショップ","侍","ロード","忍者"};
+    private int race,characterClass;
     private static final long[] GOLD={1,10,100,1000,10000,100000,1000000,10000000,100000000,1000000000,10000000000L,100000000000L,999999999999L};
     private static final String[] SPEED={"1倍","1.5倍","2倍","3倍","4倍"};
     private final List<Actor> actors=new ArrayList<>();
@@ -111,7 +114,7 @@ public final class GameActivity extends SDLActivity {
                 actors.clear();for(int i=1;i<lines.length;++i){Actor actor=new Actor(lines[i]);nameCache.put(actor.id,actor.name);actors.add(actor);}
                 lastSnapshot=value;
             }
-            if(previousPage!=page&&page==1&&!actors.isEmpty())alignment=currentActor().alignment%3;
+            if((newMenu||previousPage!=page)&&page==1&&!actors.isEmpty())resetCharacterChoices(currentActor());
             if(newMenu){
                 menu=new PadMenuDialog(this,this::backFunctionMenu);
                 menu.setOnDismissListener(d->{closedSerial=serial;commandPending=false;send("close");});
@@ -153,6 +156,10 @@ public final class GameActivity extends SDLActivity {
                 add(items,"gold","GOLDを加算  現在 "+number(actor.gold),actor.gold>=0,()->send("gold "+selectedActor+" "+goldStep),null);
                 add(items,"expStep","経験値  次の＋"+experienceSteps+"段階へ",true,()->changeExperienceStep(1),this::changeExperienceStep);
                 add(items,"exp","経験値を加算  "+number(actor.experience)+" → "+number(actor.targets[experienceSteps-1]),actor.experience>=0&&actor.targets[0]>=0,()->send("exp "+selectedActor+" "+experienceSteps),null);
+                add(items,"raceChoice","変更先の種族  "+RACES[race],true,()->changeRace(1),this::changeRace);
+                add(items,"race","種族を変更  現在 "+raceLabel(actor.race),actor.race!=race,()->send("race "+selectedActor+" "+race),null);
+                add(items,"classChoice","変更先の職業  "+CLASSES[characterClass],true,()->changeClass(1),this::changeClass);
+                add(items,"class","職業を変更  現在 "+CLASSES[actor.characterClass],actor.characterClass!=characterClass,()->send("class "+selectedActor+" "+characterClass),null);
                 add(items,"alignmentChoice","変更先の属性  "+ALIGNMENTS[alignment],true,()->changeAlignment(1),this::changeAlignment);
                 add(items,"alignment","属性を変更  現在 "+ALIGNMENTS[Math.min(3,actor.alignment)],true,()->send("alignment "+selectedActor+" "+alignment),null);
                 add(items,"spells",actor.spells?"全てのスペルを習得済み":"全てのスペルを覚える",!actor.spells,()->send("spells "+selectedActor),null);
@@ -162,15 +169,23 @@ public final class GameActivity extends SDLActivity {
         menu.update(page,items,flags[2]!=0);
     }
     private Actor currentActor(){for(Actor actor:actors)if(actor.id==selectedActor)return actor;selectedActor=actors.get(0).id;return actors.get(0);}
-    private void chooseActor(int direction){int current=0;for(int i=0;i<actors.size();++i)if(actors.get(i).id==selectedActor)current=i;Actor actor=actors.get((current+direction+actors.size())%actors.size());selectedActor=actor.id;alignment=actor.alignment%3;renderFunctionRows();}
+    private void chooseActor(int direction){int current=0;for(int i=0;i<actors.size();++i)if(actors.get(i).id==selectedActor)current=i;Actor actor=actors.get((current+direction+actors.size())%actors.size());selectedActor=actor.id;resetCharacterChoices(actor);renderFunctionRows();}
+    private void resetCharacterChoices(Actor actor){
+        alignment=actor.alignment%3;
+        race=actor.race<RACES.length?actor.race:0;
+        characterClass=actor.characterClass;
+    }
     private void changeGoldStep(int direction){goldStep=(goldStep+direction+GOLD.length)%GOLD.length;renderFunctionRows();}
     private void changeExperienceStep(int direction){experienceSteps=(experienceSteps-1+direction+3)%3+1;renderFunctionRows();}
     private void changeAlignment(int direction){alignment=(alignment+direction+3)%3;renderFunctionRows();}
+    private void changeRace(int direction){race=(race+direction+RACES.length)%RACES.length;renderFunctionRows();}
+    private void changeClass(int direction){characterClass=(characterClass+direction+CLASSES.length)%CLASSES.length;renderFunctionRows();}
+    private String raceLabel(int value){return value<RACES.length?RACES[value]:"不明";}
     private CharSequence actorLabel(Actor actor){
         android.text.SpannableStringBuilder label=new android.text.SpannableStringBuilder("#"+(actor.id+1)+"  ");int start=label.length();label.append(" ");
         android.graphics.drawable.BitmapDrawable drawable=new android.graphics.drawable.BitmapDrawable(getResources(),actor.name);drawable.setFilterBitmap(false);drawable.setBounds(0,0,dp(128),dp(16));
         label.setSpan(new android.text.style.ImageSpan(drawable,android.text.style.ImageSpan.ALIGN_BASELINE),start,start+1,android.text.Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
-        label.append("  "+ALIGNMENTS[Math.min(3,actor.alignment)]+" Lv"+actor.level);return label;
+        label.append("  "+raceLabel(actor.race)+" "+CLASSES[actor.characterClass]+" "+ALIGNMENTS[Math.min(3,actor.alignment)]+" Lv"+actor.level);return label;
     }
     private String number(long value){return value<0?"不正データ":String.format(Locale.JAPAN,"%,d",value);}
     private void updateSystemBars(){
@@ -180,9 +195,10 @@ public final class GameActivity extends SDLActivity {
     }
     @Override public void onConfigurationChanged(Configuration configuration){super.onConfigurationChanged(configuration);updateSystemBars();if(menu!=null){menu.resize();getWindow().getDecorView().post(()->{if(menu!=null)menu.resize();});}}
     static final class Actor {
-        final int id,alignment,level;final long gold,experience;final long[] targets=new long[3];final Bitmap name;final boolean spells;
+        final int id,alignment,level,race,characterClass;final long gold,experience;final long[] targets=new long[3];final Bitmap name;final boolean spells;
         Actor(String line){String[] f=line.split("\\|");id=Integer.parseInt(f[0]);gold=Long.parseLong(f[2]);experience=Long.parseLong(f[3]);alignment=Integer.parseInt(f[4]);level=Integer.parseInt(f[5]);for(int i=0;i<3;i++)targets[i]=Long.parseLong(f[6+i]);
             spells=f.length>9&&f[9].equals("1");
+            race=Integer.parseInt(f[10]);characterClass=Integer.parseInt(f[11]);
             name=Bitmap.createBitmap(64,8,Bitmap.Config.ARGB_8888);for(int letter=0;letter<8;letter++)for(int row=0;row<8;row++){int bits=Integer.parseInt(f[1].substring((letter*8+row)*2,(letter*8+row)*2+2),16);for(int x=0;x<8;x++)if((bits&(128>>x))!=0)name.setPixel(letter*8+x,row,Color.WHITE);}
         }
     }

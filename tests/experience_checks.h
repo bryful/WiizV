@@ -125,7 +125,7 @@ inline void runExperienceChecks(Player& session)
     session.experienceLevels = 3; session.menuRow = 4; session.activateMenu();
     require(session.characterExperience() == 2776, "メニューから経験値変更を実行できません。");
     session.notice.clear(); session.uiScreenshot = session.dataDirectory / L"experience-editor.bmp"; session.draw();
-    session.menuRow = 7; session.activateMenu();
+    session.menuRow = 12; session.activateMenu();
     require(session.characterExperience() == 0, "メニューから編集前の状態へ戻せません。");
     session.backMenu(); session.toggleMenu();
 

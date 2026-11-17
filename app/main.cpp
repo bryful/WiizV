@@ -289,8 +289,13 @@ struct Player
     bool characterMenu = false;
     unsigned editCharacter = 0, goldStep = 4, experienceLevels = 1;
     unsigned editAlignment = 0;
+    unsigned editRace = 0, editClass = 0;
     static constexpr std::array<const char*, 4> ALIGNMENT_LABELS{"Good", "Neutral", "Evil", "Unknown"};
-    enum class CharacterEdit { Gold, Experience, Alignment, Spells };
+    static constexpr std::array<const char*, 5> RACE_LABELS{"Human", "Elf", "Dwarf", "Gnome", "Hobbit"};
+    static constexpr std::array<const char*, 8> CLASS_LABELS{"Fighter", "Mage", "Priest", "Thief", "Bishop", "Samurai", "Lord", "Ninja"};
+    static unsigned characterRace(const uint8_t* record) { return record[0xa] >> 5; }
+    static unsigned characterClass(const uint8_t* record) { return (record[0xa] >> 2) & 7; }
+    enum class CharacterEdit { Gold, Experience, Alignment, Spells, Race, Class };
     static constexpr std::array<uint64_t, 13> GOLD_STEPS{1, 10, 100, 1000, 10000, 100000, 1000000,
         10000000, 100000000, 1000000000, 10000000000ULL, 100000000000ULL, characterData::MAX_GOLD};
     bool maximumBonus = false;
@@ -473,8 +478,8 @@ struct Player
         else menuLoad = direction > 0;
     }
 
-    int menuRows() const { return characterMenu ? 10 : effectsMenu ? static_cast<int>(EFFECT_KEYS.size()) + 1 : 15; }
-    int menuRowHeight() const { return characterMenu || effectsMenu ? 32 : 22; }
+    int menuRows() const { return characterMenu ? 14 : effectsMenu ? static_cast<int>(EFFECT_KEYS.size()) + 1 : 15; }
+    int menuRowHeight() const { return characterMenu ? 24 : effectsMenu ? 32 : 22; }
 
     void toggleButtons()
     {
@@ -613,12 +618,14 @@ struct Player
     {
         if (characterMenu)
         {
-            if (menuRow < 2 || menuRow == 3 || menuRow == 5) changeCharacterChoice(1);
+            if (menuRow < 2 || menuRow == 3 || menuRow == 5 || menuRow == 7 || menuRow == 9) changeCharacterChoice(1);
             else if (menuRow == 2) executeGoldAdd();
             else if (menuRow == 4) executeExperienceAdd();
             else if (menuRow == 6) executeAlignmentChange();
-            else if (menuRow == 7) restoreEditBackup();
-            else if (menuRow == 8) executeLearnAllSpells();
+            else if (menuRow == 8) executeCharacterEdit(CharacterEdit::Race);
+            else if (menuRow == 10) executeCharacterEdit(CharacterEdit::Class);
+            else if (menuRow == 11) executeLearnAllSpells();
+            else if (menuRow == 12) restoreEditBackup();
             else backMenu();
             return;
         }
@@ -684,6 +691,15 @@ struct Player
         return gameRam()[0x1000 + editCharacter * 0x80 + 0xa] & 3;
     }
 
+    void resetCharacterChoices()
+    {
+        editAlignment = characterAlignment() % 3;
+        const auto* record = gameRam() + 0x1000 + editCharacter * 0x80;
+        const auto race = characterRace(record);
+        editRace = race < RACE_LABELS.size() ? race : 0;
+        editClass = characterClass(record);
+    }
+
     uint64_t targetExperience() const
     {
         require(editCharacter < 20, "対象のキャラクターが不正です。");
@@ -701,7 +717,7 @@ struct Player
         const auto characters = registeredCharacters();
         require(!characters.empty(), "登録済みのキャラクターがいません。");
         if (std::find(characters.begin(), characters.end(), editCharacter) == characters.end()) editCharacter = characters.front();
-        editAlignment = characterAlignment() % 3;
+        resetCharacterChoices();
         characterMenu = true; effectsMenu = false; menuRow = 0;
     }
 
@@ -715,7 +731,7 @@ struct Player
             const int index = found == characters.end() ? 0 : static_cast<int>(found - characters.begin());
             const int count = static_cast<int>(characters.size());
             editCharacter = characters[(index + direction + count) % count];
-            editAlignment = characterAlignment() % 3;
+            resetCharacterChoices();
         }
         else if (menuRow == 1)
             goldStep = static_cast<unsigned>((static_cast<int>(goldStep) + direction + static_cast<int>(GOLD_STEPS.size())) % static_cast<int>(GOLD_STEPS.size()));
@@ -723,6 +739,10 @@ struct Player
             experienceLevels = static_cast<unsigned>((static_cast<int>(experienceLevels) - 1 + direction + 3) % 3 + 1);
         else if (menuRow == 5)
             editAlignment = static_cast<unsigned>((static_cast<int>(editAlignment) + direction + 3) % 3);
+        else if (menuRow == 7)
+            editRace = static_cast<unsigned>((editRace + RACE_LABELS.size() + direction) % RACE_LABELS.size());
+        else if (menuRow == 9)
+            editClass = static_cast<unsigned>((editClass + CLASS_LABELS.size() + direction) % CLASS_LABELS.size());
     }
 
     fs::path editBackupPath() const { return slotPath(1).parent_path() / (romPath.stem().wstring() + L".before-edit.wvs"); }
@@ -753,6 +773,12 @@ struct Player
         }else if(kind==CharacterEdit::Alignment){
             require(editAlignment<3&&characterAlignment()!=editAlignment,"すでに指定した属性、または無効な属性です。");
             edited[0xa]=static_cast<uint8_t>((edited[0xa]&0xfc)|editAlignment);
+        }else if(kind==CharacterEdit::Race){
+            require(editRace < RACE_LABELS.size() && characterRace(record) != editRace, "すでに指定した種族、または無効な種族です。");
+            edited[0xa] = static_cast<uint8_t>((edited[0xa] & 0x1f) | (editRace << 5));
+        }else if(kind==CharacterEdit::Class){
+            require(editClass < CLASS_LABELS.size() && characterClass(record) != editClass, "すでに指定した職業、または無効な職業です。");
+            edited[0xa] = static_cast<uint8_t>((edited[0xa] & 0xe3) | (editClass << 2));
         }else{
             if(characterData::allSpellsLearned(record)){showNotice("All spells already learned");return;}
             std::fill(edited.begin()+0x35,edited.begin()+0x43,0xff);
@@ -1082,7 +1108,7 @@ struct Player
         }
         if (!dots.empty()) sdlCheck(SDL_RenderFillRects(renderer, dots.data(), static_cast<int>(dots.size())));
         constexpr const char* classes[]{"Fig", "Mag", "Pri", "Thi", "Bis", "Sam", "Lor", "Nin"};
-        const auto kind = (record[0xa] >> 2) & 7;
+        const auto kind = characterClass(record);
         const char alignment = "GNE?"[record[0xa] & 3];
         const std::string label = std::string(1, alignment) + "-" + classes[kind];
         sdlCheck(SDL_RenderDebugText(renderer, x + 152, y + 4, label.c_str()));
@@ -1154,7 +1180,12 @@ struct Player
                         row == 4 ? validExperience ? "Add EXP: " + characterData::goldText(experience) + " -> " + characterData::goldText(target) : std::string("Add EXP: invalid data") :
                         row == 5 ? std::string("Alignment: ") + ALIGNMENT_LABELS[editAlignment < 3 ? editAlignment : 3] :
                         row == 6 ? std::string("Apply alignment: ") + ALIGNMENT_LABELS[record[0xa] & 3] + " -> " + ALIGNMENT_LABELS[editAlignment < 3 ? editAlignment : 3] :
-                        row == 7 ? std::string(fs::exists(editBackupPath()) ? "Restore pre-edit game state" : "Restore pre-edit game state (no backup)") : row == 8 ? std::string(characterData::allSpellsLearned(record) ? "All spells learned" : "Learn all spells") : std::string("Back");
+                        row == 7 ? std::string("Race: ") + RACE_LABELS[editRace] :
+                        row == 8 ? std::string("Apply race: ") + (characterRace(record) < RACE_LABELS.size() ? RACE_LABELS[characterRace(record)] : "Unknown") + " -> " + RACE_LABELS[editRace] :
+                        row == 9 ? std::string("Class: ") + CLASS_LABELS[editClass] :
+                        row == 10 ? std::string("Apply class: ") + CLASS_LABELS[characterClass(record)] + " -> " + CLASS_LABELS[editClass] :
+                        row == 11 ? std::string(characterData::allSpellsLearned(record) ? "All spells learned" : "Learn all spells") :
+                        row == 12 ? std::string(fs::exists(editBackupPath()) ? "Restore pre-edit game state" : "Restore pre-edit game state (no backup)") : std::string("Back");
                     sdlCheck(SDL_RenderDebugText(renderer, box.x + 24, y, label.c_str()));
                     if (row == 0) drawCharacterName(box.x + 170, y - 3);
                 }

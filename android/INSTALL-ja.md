@@ -1,4 +1,4 @@
-# Android Release版 0.2.5
+# Android Release版 0.2.6
 
 Android 6以降のARM64端末向けです。APKを端末へコピーしてインストールしてください。WiizV専用のRelease鍵で署名しています。ROMは含みません。
 

@@ -8,7 +8,7 @@ $destination = [IO.Path]::GetFullPath($Destination)
 $windows = Join-Path $destination 'Windows'
 $android = Join-Path $destination 'Android'
 New-Item -ItemType Directory -Force $windows, $android, (Join-Path $windows 'Rom') | Out-Null
-$otherApks = @(Get-ChildItem -LiteralPath $android -Filter '*.apk' | Where-Object Name -ne 'WiizV-0.2.5-release.apk')
+$otherApks = @(Get-ChildItem -LiteralPath $android -Filter '*.apk' | Where-Object Name -ne 'WiizV-0.2.6-release.apk')
 if ($otherApks.Count) { throw '配布先に旧APKが残っています。配布先の外へ保管してから再実行してください。' }
 foreach ($name in @('WiizV.exe', 'SDL3.dll', 'wiizv_snes9x.dll')) {
     Copy-Item -LiteralPath (Join-Path $root "x64/Release/$name") -Destination $windows
@@ -16,7 +16,7 @@ foreach ($name in @('WiizV.exe', 'SDL3.dll', 'wiizv_snes9x.dll')) {
 $licenses = Join-Path $windows 'licenses'
 New-Item -ItemType Directory -Force $licenses | Out-Null
 Copy-Item -Path (Join-Path $root 'x64/Release/licenses/*') -Destination $licenses -Recurse -Force
-Copy-Item -LiteralPath $releaseApk -Destination (Join-Path $android 'WiizV-0.2.5-release.apk')
+Copy-Item -LiteralPath $releaseApk -Destination (Join-Path $android 'WiizV-0.2.6-release.apk')
 Copy-Item -LiteralPath (Join-Path $root 'android/INSTALL-ja.md') -Destination (Join-Path $android 'インストール.md')
 Copy-Item -LiteralPath (Join-Path $root 'README.md') -Destination (Join-Path $destination '使用説明書.md')
 Copy-Item -LiteralPath (Join-Path $root 'docs/使用説明書.html') -Destination $destination

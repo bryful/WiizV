@@ -72,7 +72,8 @@ inline void androidMenu(Player& session)
             const bool valid = characterData::experienceTarget(record, session.rom.data(), session.rom.size(), levels, target);
             text << '|' << (valid ? std::to_string(target) : "-1");
         }
-        text << '|' << characterData::allSpellsLearned(record) << '\n';
+        text << '|' << characterData::allSpellsLearned(record)
+            << '|' << Player::characterRace(record) << '|' << Player::characterClass(record) << '\n';
     }
     androidShowMenu(text.str());
 }
@@ -185,7 +186,8 @@ inline bool androidEvent(Player& session, const SDL_Event& event)
             session.inputBlocked = true; return true;
         }
         if(action=="rom") { session.saveRam();loadRom(session,fs::path(command->substr(4)));return true; }
-        int first = 0, second = 0; input >> first >> second;
+        int first = 0, second = 0;
+        const bool hasTwoArguments = static_cast<bool>(input >> first >> second);
         if (action == "save") { require(first >= 1 && first <= 5, "スロットが不正です。"); session.saveState(first); }
         else if (action == "load") { require(first >= 1 && first <= 5, "スロットが不正です。"); session.loadState(first); return true; }
         else if (action == "speed") { require(first >= 0 && first < 5, "倍率が不正です。"); session.setSpeed(first); }
@@ -202,12 +204,24 @@ inline bool androidEvent(Player& session, const SDL_Event& event)
         else if (action == "character") { session.openCharacterMenu(); androidMenuPage = 1; }
         else if (action == "root") { session.characterMenu = false; androidMenuPage = 0; }
         else if (action == "reset") { androidReset(session);return true; }
-        else if (action == "gold" || action == "exp" || action == "alignment" || action == "undo" || action == "spells")
+        else if (action == "gold" || action == "exp" || action == "alignment" || action == "race" || action == "class" || action == "undo" || action == "spells")
         {
             require(first >= 0 && first < 20, "対象キャラクターが不正です。"); session.editCharacter = static_cast<unsigned>(first);
             if (action == "gold") { require(second >= 0 && second < 13, "加算額が不正です。"); session.goldStep = static_cast<unsigned>(second); session.executeGoldAdd(); }
             if (action == "exp") { require(second >= 1 && second <= 3, "加算段数が不正です。"); session.experienceLevels = static_cast<unsigned>(second); session.executeExperienceAdd(); }
             if (action == "alignment") { session.editAlignment = static_cast<unsigned>(second); session.executeAlignmentChange(); }
+            if (action == "race")
+            {
+                require(hasTwoArguments && second >= 0 && static_cast<unsigned>(second) < Player::RACE_LABELS.size(), "種族が不正です。");
+                session.editRace = static_cast<unsigned>(second);
+                session.executeCharacterEdit(Player::CharacterEdit::Race);
+            }
+            if (action == "class")
+            {
+                require(hasTwoArguments && second >= 0 && static_cast<unsigned>(second) < Player::CLASS_LABELS.size(), "職業が不正です。");
+                session.editClass = static_cast<unsigned>(second);
+                session.executeCharacterEdit(Player::CharacterEdit::Class);
+            }
             if (action == "spells") session.executeLearnAllSpells();
             if (action == "undo") session.restoreEditBackup();
         }

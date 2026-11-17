@@ -4,7 +4,9 @@ inline void runCharacterAlignmentResumeChecks(Player& session)
 {
     require(session.loadedSavedRam && (session.gameRam()[0x100a] & 3) == 2 && (session.gameRam()[0x108a] & 3) == 1,
         "通常セーブから変更した属性を復元できません。");
-    const std::string report = "PASS: original game validates SRAM checksums and restores Evil/Neutral characters after restart\n";
+    require((session.gameRam()[0x100a] & 0xe0) == 0x80 && (session.gameRam()[0x108a] & 0x1c) == 0x1c,
+        "通常セーブから変更した種族・職業を復元できません。");
+    const std::string report = "PASS: original game restores edited race, class and alignment after restart\n";
     writeFile(session.dataDirectory / L"character-alignment-resume-report.txt", report.data(), report.size());
 }
 
@@ -76,7 +78,7 @@ inline void runCharacterAlignmentChecks(Player& session)
     session.editAlignment = 2; session.menuRow = 6; session.activateMenu();
     session.notice.clear(); session.uiScreenshot = session.dataDirectory / L"character-alignment-editor.bmp"; session.draw();
     require(session.characterAlignment() == 2, "メニューから属性を変更できません。");
-    session.menuRow = 7; session.activateMenu(); require(session.characterAlignment() == 0, "メニューから属性を復元できません。");
+    session.menuRow = 12; session.activateMenu(); require(session.characterAlignment() == 0, "メニューから属性を復元できません。");
     session.menuRow = 0; session.editAlignment = 2;
     event.type = SDL_EVENT_KEY_DOWN; event.key.scancode = SDL_SCANCODE_RIGHT;
     require(handleAction(session, event) && session.editCharacter == 1 && session.editAlignment == 0, "対象を変えても属性の選択が前のキャラクターのままです。");
@@ -116,7 +118,19 @@ inline void runCharacterAlignmentChecks(Player& session)
 
     session.applyStateFile(baseline); session.toggleMenu(); session.openCharacterMenu(); session.editCharacter = 0; session.editAlignment = 2;
     session.executeAlignmentChange(); session.editCharacter = 1; session.editAlignment = 1; session.executeAlignmentChange();
+    const auto beforeClass = ram[0x108a];
+    session.editClass = 7; session.menuRow = 10; session.activateMenu();
+    require(ram[0x108a] == ((beforeClass & 0xe3) | 0x1c), "職業だけを変更できません。");
+    session.menuRow = 12; session.activateMenu();
+    require(ram[0x108a] == beforeClass, "職業を復元できません。");
+    session.menuRow = 10; session.activateMenu();
+    session.editCharacter = 0;
+    const auto beforeRace = ram[0x100a];
+    session.editRace = 0; session.menuRow = 7; session.changeCharacterChoice(-1);
+    require(session.editRace == 4, "種族を逆順に選択できません。");
+    session.menuRow = 8; session.activateMenu();
+    require(ram[0x100a] == ((beforeRace & 0x1f) | 0x80), "種族だけを変更できません。");
     for (int slot = 1; slot <= 5; ++slot) require(readFile(session.slotPath(slot)) == slots[slot - 1], "属性編集で5スロットが変更されました。");
-    const std::string report = "PASS: Good/Neutral/Evil transitions at all speeds; all race/class bits preserved; WRAM/parameter isolation; native mirrored SRAM; UI; backup/undo; failures; stale tavern candidate/party checks; training/camp/stairs/exploration; title/battle rejection; quick slots preserved\n";
+    const std::string report = "PASS: alignment transitions at all speeds; independent race/class edits; WRAM/parameter isolation; native mirrored SRAM; UI; backup/undo; failures; tavern candidate/party checks; training/camp/stairs/exploration; title/battle rejection; quick slots preserved\n";
     writeFile(session.dataDirectory / L"character-alignment-check-report.txt", report.data(), report.size());
 }
