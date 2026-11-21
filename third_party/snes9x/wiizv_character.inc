@@ -4,7 +4,7 @@
 static unsigned wiizvGoldStatus = 0, wiizvGoldCharacter = 0, wiizvGoldResumeStack = 0;
 static unsigned wiizvGoldWaitStack = 0;
 static uint64 wiizvGoldTarget = 0;
-enum class WiizvCharacterEdit { Gold, Experience, Alignment };
+enum class WiizvCharacterEdit { Gold, Experience, Alignment, Items };
 static WiizvCharacterEdit wiizvCharacterEdit = WiizvCharacterEdit::Gold;
 
 extern "C" WIIZV_EXPORT bool wiizv_can_edit_character()
@@ -23,6 +23,40 @@ extern "C" WIIZV_EXPORT bool wiizv_can_edit_character()
         waitStack >= 0x1f80 && waitStack <= 0x1fd8 && Memory.RAM[0x1fdd] == 0x43 &&
         Memory.RAM[0x1fde] == 0xa8 && Memory.RAM[0x1fdf] == 4;
     return waiting && (castle || facility || camp || wiizv_can_move());
+}
+
+extern "C" WIIZV_EXPORT bool wiizv_can_edit_items()
+{
+    if (Memory.ROMCRC32 != 0x547cf7b9 || Registers.PB || wiizvGoldStatus == 1 || wiizvGoldStatus == 3) return false;
+    const unsigned stack = Memory.RAM[0x1a] | (Memory.RAM[0x1b] << 8);
+    if (stack < 0x1f00 || stack > 0x1fe0 ||
+        !((Registers.PCw >= 0x8215 && Registers.PCw <= 0x8218 && Registers.S.W == stack) ||
+        (Registers.PCw == 0x8150 && Registers.S.W + 4u == stack))) return false;
+    if (!Memory.RAM[0xdb] || Memory.RAM[0xdb] > 6) return false;
+    unsigned seen = 0;
+    for (unsigned i = 0; i < Memory.RAM[0xdb]; ++i) {
+        unsigned slot = Memory.RAM[0xdc+i];
+        if (slot >= 20 || !Memory.RAM[0x1000+slot*0x80] || (seen & (1u<<slot))) return false;
+        seen |= 1u<<slot;
+    }
+    // Exclude active JSL return frames from the combat engine, without a location allowlist.
+    for (unsigned i = stack+1; i+2 <= 0x1fff; ++i) {
+        unsigned ret = Memory.RAM[i] | (Memory.RAM[i+1]<<8), bank = Memory.RAM[i+2];
+        if (ret < 0x8003 || bank > 0x1f) continue;
+        unsigned off = bank*0x8000+(ret&0x7fff)-3;
+        if (off+3 < Memory.CalculatedSize && Memory.ROM[off] == 0x22 && bank == 5 && ret >= 0xac1b) return false;
+    }
+    return true;
+}
+
+extern "C" WIIZV_EXPORT bool wiizv_request_item_recalc(unsigned character)
+{
+    if (!wiizv_can_edit_items() || character >= 20 || !Memory.RAM[0x1000+character*0x80]) return false;
+    wiizvGoldCharacter = character;
+    wiizvCharacterEdit = WiizvCharacterEdit::Items;
+    wiizvGoldStatus = 1;
+    wiizvGoldWaitStack = Memory.RAM[0x1a] | (Memory.RAM[0x1b]<<8);
+    return true;
 }
 
 extern "C" WIIZV_EXPORT bool wiizv_request_gold(unsigned character, uint64 amount)
@@ -81,7 +115,12 @@ static inline void wiizvCharacterHook()
     if (wiizvGoldStatus != 1 || Registers.S.W != wiizvGoldWaitStack + 4 || Registers.D.W || Registers.DB ||
         !CheckMemory() || CheckIndex()) return;
     auto* record = Memory.RAM + 0x1000 + wiizvGoldCharacter * 0x80;
-    if (wiizvCharacterEdit == WiizvCharacterEdit::Alignment)
+    if (wiizvCharacterEdit == WiizvCharacterEdit::Items) {
+        unsigned address = 0x1000 + wiizvGoldCharacter * 0x80;
+        Memory.RAM[0x30] = static_cast<uint8>(address); Memory.RAM[0x31] = static_cast<uint8>(address >> 8);
+        Registers.X.W = address;
+    }
+    else if (wiizvCharacterEdit == WiizvCharacterEdit::Alignment)
         record[0xa] = static_cast<uint8>((record[0xa] & 0xfc) | wiizvGoldTarget);
     else if (wiizvCharacterEdit == WiizvCharacterEdit::Experience) characterData::writeExperience(record, wiizvGoldTarget);
     else characterData::writeGold(record, wiizvGoldTarget);
@@ -91,5 +130,5 @@ static inline void wiizvCharacterHook()
     Memory.RAM[Registers.S.W--] = 0;
     Memory.RAM[Registers.S.W--] = 0x81;
     Memory.RAM[Registers.S.W--] = 0xf4;
-    S9xSetPCBase(0x00b8c4);
+    S9xSetPCBase(wiizvCharacterEdit == WiizvCharacterEdit::Items ? 0x009fa2 : 0x00b8c4);
 }

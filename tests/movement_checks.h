@@ -121,9 +121,13 @@ inline void runMovementChecks(Player& session)
         session.draw();
         const auto beforeMove = session.captureState();
         const auto facing = ram[0xef];
+        const bool previouslyExplored = session.cellExplored(*target);
         session.executeMapMove();
         require(!session.mapOpen && ram[0xb5] == static_cast<uint8_t>(target->x) && ram[0xb6] == static_cast<uint8_t>(target->y) && ram[0xb7] == floor && ram[0xef] == facing,
             "階層・座標・向きが一致しません。");
+        // 原作の描画・マス処理完了後に踏破ビットが更新される。
+        for (int frame = 0; frame < 120 && !session.cellExplored(*target); ++frame) runTestFrames(session, 1);
+        require(session.cellExplored(*target), "移動先の原作踏破ビットが反映されません。階層: " + std::to_string(floor));
         const auto saved = readFile(session.slotPath(1));
         require(decodeState(saved, session.romId, session.coreId, session.core.serialize_size()) == beforeMove, "移動前のステートがスロット1に保存されませんでした。");
         for (const auto& cell : cells)
@@ -136,6 +140,7 @@ inline void runMovementChecks(Player& session)
                 const int y = cell.y + 0x81 - ram[0xe001 + block * 4];
                 if (x < 0 || x >= 8 || y < 0 || y >= 8) continue;
                 const auto index = (ram[0xe002 + block * 4] | (ram[0xe003 + block * 4] << 8)) + (7 - y) * 8 + x;
+                require(cell.explorationIndex == block * 64 + y * 8 + x, "踏破情報の区画インデックスが一致しません。");
                 require(ram[0xe800 + index] == cell.flags, "移動先の階層データが更新されませんでした。");
                 matched = true; break;
             }
@@ -143,6 +148,7 @@ inline void runMovementChecks(Player& session)
         }
         session.loadState(1);
         require(memoryHash(session) == baseRam, "スロット1で移動前に戻れませんでした。");
+        require(session.cellExplored(*target) == previouslyExplored, "踏破表示がステート読込に追従しません。");
     }
 
     session.applyStateFile(baseline);
@@ -263,6 +269,6 @@ inline void runMovementChecks(Player& session)
     require(memoryHash(session)==baseRam,"Androidマップの操作確認中にゲーム状態が変化しました。");
 #endif
     session.openMap();
-    const auto report = std::string("PASS: stair prompt open/cancel/same-floor/cross-floor/cleanup/slot 1 restore; all eight floors; floor cache refreshed; facing retained; pre-move slot 1 and restore; title/castle/camp/combat rejection; invalid cell; write failure; event destination; F3; virtual-pad RT debounce/background, LB/RB, left stick\n");
+    const auto report = std::string("PASS: stair prompt open/cancel/same-floor/cross-floor/cleanup/slot 1 restore; all eight floors; native exploration bits/index and state restore; floor cache refreshed; facing retained; pre-move slot 1 and restore; title/castle/camp/combat rejection; invalid cell; write failure; event destination; F3; virtual-pad RT debounce/background, LB/RB, left stick\n");
     writeFile(session.dataDirectory / L"movement-check-report.txt", report.data(), report.size());
 }

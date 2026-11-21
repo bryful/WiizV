@@ -43,6 +43,9 @@ public final class GameActivity extends SDLActivity {
         }catch(Exception error){Toast.makeText(this,error.getMessage(),Toast.LENGTH_LONG).show();finish();return;}
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
         updateSystemBars();
+        mSurface.addOnLayoutChangeListener((view,left,top,right,bottom,oldLeft,oldTop,oldRight,oldBottom)->{
+            if(menu!=null&&menu.isShowing())menu.resize();
+        });
     }
     public String nativeDirectory(){return getApplicationInfo().nativeLibraryDir;}
     public String dataDirectory(){
@@ -102,7 +105,7 @@ public final class GameActivity extends SDLActivity {
     });}
     public void dismissFunctionMenu(){closedSerial=serial;commandPending=false;send("close");if(menu!=null)menu.dismiss();}
     private void closeMenu(){dismissFunctionMenu();}
-    private void backFunctionMenu(){if(page==1)send("root");else dismissFunctionMenu();}
+    private void backFunctionMenu(){if(page!=0)send("root");else dismissFunctionMenu();}
     public void showFunctionMenu(String value){runOnUiThread(()->{
         try{
             String[] lines=value.split("\n"),header=lines[0].split("\\|");int incoming=Integer.parseInt(header[10]);
@@ -120,7 +123,21 @@ public final class GameActivity extends SDLActivity {
                 menu.setOnDismissListener(d->{closedSerial=serial;commandPending=false;send("close");});
             }
             renderFunctionRows();if(newMenu)menu.show();menu.resize();
-        }catch(Exception error){commandPending=false;showNotice("メニューを更新できません: "+error.getMessage());}
+        }catch(Exception error){android.util.Log.e("WiizVMenu","Menu update failed",error);commandPending=false;showNotice("メニューを更新できません: "+error.getMessage());}
+    });}
+    private final Rect menuBounds=new Rect();
+    Rect functionMenuBounds(){
+        Rect area=new Rect(menuBounds);
+        if(mSurface!=null){
+            int[] origin=new int[2];mSurface.getLocationOnScreen(origin);
+            area.offset(origin[0],origin[1]);
+        }
+        return area;
+    }
+    public void setFunctionMenuBounds(int x,int y,int width,int height){runOnUiThread(()->{
+        Rect next=new Rect(x,y,x+width,y+height);
+        if(menuBounds.equals(next))return;
+        menuBounds.set(next);if(menu!=null&&menu.isShowing())menu.resize();
     });}
     public void menuKey(int action){runOnUiThread(()->{if(menu!=null&&menu.isShowing())menu.navigate(action);});}
     private void add(List<PadMenuDialog.Item> items,String id,CharSequence label,boolean enabled,Runnable execute,PadMenuDialog.Adjust adjust){items.add(new PadMenuDialog.Item(id,label,enabled,execute,adjust));}
@@ -129,10 +146,8 @@ public final class GameActivity extends SDLActivity {
         if(menu==null)return;List<PadMenuDialog.Item> items=new ArrayList<>();
         if(page==0){
             add(items,"resume","ゲームにもどる",true,this::dismissFunctionMenu,null);
-            for(int slot=1;slot<=5;++slot){final int index=slot;boolean occupied=(flags[8]&(1<<(slot-1)))!=0;
-                add(items,"save"+slot,"スロット"+slot+"  保存",true,()->send("save "+index),null);
-                add(items,"load"+slot,"スロット"+slot+(occupied?"  読込":"  空き"),occupied,()->{dismissFunctionMenu();send("load "+index);},null);
-            }
+            add(items,"saveStates","ステート保存",true,()->send("save_menu"),null);
+            add(items,"loadStates","ステート読込",true,()->send("load_menu"),null);
             add(items,"speed","倍速  "+SPEED[flags[1]],true,()->send("speed "+((flags[1]+1)%5)),direction->send("speed "+((flags[1]+direction+5)%5)));
             toggle(items,"swap","ABXYいれかえ（A/B・X/Y）",flags[2]!=0,"swap");
             toggle(items,"bonus","新規キャラクター ボーナス最大",flags[3]!=0,"bonus");
@@ -146,7 +161,14 @@ public final class GameActivity extends SDLActivity {
             String[] effects={"あかり LOMILWA","ほご MAPORFIC","しきべつ LATUMAPIC","ふゆう LITOFEITO","MP9 / 呪文消費なし"};
             for(int i=0;i<effects.length;++i)toggle(items,"effect"+i,effects[i],(flags[7]&(1<<i))!=0,"effect "+i);
             add(items,"character","キャラクターの編集",flags[9]!=0,()->send("character"),null);
+            add(items,"items","パーティーのアイテム編集",true,()->{dismissFunctionMenu();send("items");},null);
             add(items,"reset","ソフトを再起動",true,()->{dismissFunctionMenu();send("reset");},null);
+        }else if(page==2||page==3){
+            add(items,"root","機能メニューにもどる",true,()->send("root"),null);
+            for(int slot=1;slot<=5;++slot){final int index=slot;boolean occupied=(flags[8]&(1<<(slot-1)))!=0;
+                if(page==2)add(items,"save"+slot,"スロット"+slot+(occupied?"  上書き保存":"  保存"),true,()->send("save "+index),null);
+                else add(items,"load"+slot,"スロット"+slot+(occupied?"  読込":"  空き"),occupied,()->{dismissFunctionMenu();send("load "+index);},null);
+            }
         }else{
             add(items,"root","機能メニューにもどる",true,()->send("root"),null);
             if(!actors.isEmpty()){

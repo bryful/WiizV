@@ -38,6 +38,7 @@ copy /Y "$(ProjectDir)README.md" "$(OutDir)" || exit /b 1</Command></PostBuildEv
   </ItemDefinitionGroup>
   <ItemGroup><ClCompile Include="app\main.cpp" /></ItemGroup>
   <ItemGroup><ClInclude Include="tests\effects_checks.h" /></ItemGroup>
+  <ItemGroup><ClInclude Include="app\item_menu.h" /><ClInclude Include="app\item_text.h" /><ClInclude Include="tests\item_checks.h" /><None Include="app\item_player.inc" /></ItemGroup>
   <ItemGroup><ClInclude Include="tests\mp_checks.h" /></ItemGroup>
   <ItemGroup><ClInclude Include="app\crt_filter.h" /><ClInclude Include="tests\crt_checks.h" /></ItemGroup>
   <ItemGroup><ClInclude Include="third_party\snes9x\wiizv_character_data.h" /><ClInclude Include="tests\gold_checks.h" /><ClInclude Include="tests\experience_checks.h" /><ClInclude Include="tests\character_alignment_checks.h" /></ItemGroup>

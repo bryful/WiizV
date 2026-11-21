@@ -1,5 +1,5 @@
 WiizV 配布パッケージ
-2026年10月25日
+2026年11月21日
 
 最初に「使用説明書.html」をブラウザーで開いてください。
 詳しい機能説明は「使用説明書.md」にも収録しています。
@@ -11,7 +11,7 @@ Windows版
   通常セーブ・設定は %APPDATA%\WiizV に保存します。
 
 Android版
-  Android\WiizV-0.2.6-release.apk を端末へコピーしてインストールします。
+  Android\WiizV-0.2.11-release.apk を端末へコピーしてインストールします。
   Android 6以降のARM64端末向けです。x86_64にも対応します。
   WiizV専用のRelease鍵で署名した配布版です。
   旧debug版からは上書きできません。先にDocuments/WiizV全体を別の場所へ

@@ -88,16 +88,31 @@ inline void androidSuspend(Player& session)
 
 inline void androidReset(Player& session)
 {
-    session.saveRam();session.core.reset();session.menuOpen=false;session.mapOpen=false;
+    session.saveRam();session.core.reset();session.menuOpen=false;session.mapOpen=false;session.items.open=false;
     session.characterMenu=false;session.paused=false;session.inputBlocked=true;
     SDL_ClearAudioStream(session.audio);androidSuspend(session);
 }
 
 inline void androidAction(Player& session, int action)
 {
+    if(session.menuOpen){
+        if(action>=14&&action<=17)androidMenuKey(action==14?2:action==15?3:action==16?4:5);
+        else if(action==20)androidMenuKey(session.swapButtons?1:0);
+        else if(action==21)androidMenuKey(session.swapButtons?0:1);
+        else if(action==1)androidMenuKey(1);
+        return;
+    }
+    if(action==8){if(session.items.open)session.closeItems();else session.openItems();return;}
+    if(session.items.open&&action>=14){
+        if(action==14)session.itemCommand(0);if(action==15)session.itemCommand(1);
+        if(action==16)session.itemCommand(2);if(action==17)session.itemCommand(3);
+        if(action==18)session.itemCommand(4);if(action==19)session.itemCommand(5);
+        if(action==20)session.itemCommand(session.swapButtons?7:6);
+        if(action==21)session.itemCommand(session.swapButtons?6:7);return;
+    }
     if (action == 1) { androidMenuPage = 0; session.toggleMenu(); }
     else if (action == 2) session.saveState(1);
-    else if (action == 3) { if (session.mapOpen) session.closeMap(); else { session.openMap(); androidMapFloorSeen = 0; } }
+    else if (action == 3) { if(session.items.open)session.closeItems(); if (session.mapOpen) session.closeMap(); else { session.openMap(); androidMapFloorSeen = 0; } }
     else if (action == 4) session.loadState(1);
     else if (action == 5) session.setSpeed((session.speedIndex + 1) % 5);
     else if (action == 6) androidChooseRom();
@@ -201,7 +216,10 @@ inline bool androidEvent(Player& session, const SDL_Event& event)
         }
         else if (action == "crt") session.toggleCrtDisplay();
         else if (action == "effect") { require(first >= 0 && first < 5, "効果が不正です。"); session.toggleEffect(static_cast<unsigned>(first)); }
+        else if(action=="items"){session.openItems();return true;}
         else if (action == "character") { session.openCharacterMenu(); androidMenuPage = 1; }
+        else if (action == "save_menu") { session.characterMenu = false; androidMenuPage = 2; }
+        else if (action == "load_menu") { session.characterMenu = false; androidMenuPage = 3; }
         else if (action == "root") { session.characterMenu = false; androidMenuPage = 0; }
         else if (action == "reset") { androidReset(session);return true; }
         else if (action == "gold" || action == "exp" || action == "alignment" || action == "race" || action == "class" || action == "undo" || action == "spells")
@@ -239,7 +257,8 @@ inline bool androidEvent(Player& session, const SDL_Event& event)
         if(event.type==SDL_EVENT_KEY_UP){androidBackHeld=false;return true;}
         if(androidBackHeld||event.key.repeat)return true;
         androidBackHeld=true;
-        if (session.mapOpen) session.closeMap(); else { androidMenuPage = 0; session.toggleMenu(); }
+        if(session.items.open)session.itemCommand(7);
+        else if (session.mapOpen) session.closeMap(); else { androidMenuPage = 0; session.toggleMenu(); }
         return true;
     }
     if (event.type != SDL_EVENT_FINGER_DOWN && event.type != SDL_EVENT_FINGER_MOTION &&
@@ -250,24 +269,24 @@ inline bool androidEvent(Player& session, const SDL_Event& event)
     {
         androidFingers.erase(event.tfinger.fingerID); return true;
     }
-    if (!session.focused || session.menuOpen) return true;
+    if (!session.focused) return true;
     auto& finger = androidFingers[event.tfinger.fingerID];
     if(finger.blocked)return true;
     if(event.type==SDL_EVENT_FINGER_MOTION&&(finger.action<14||finger.action>17))return true;
     const auto hit = std::find_if(androidButtons.begin(), androidButtons.end(), [&](const auto& button) { return androidContains(button.box, x, y); });
-    if (hit == androidButtons.end()) { finger.action = 0; finger.mask = 0; return true; }
+    if (hit == androidButtons.end()) { finger.action = 0; finger.mask = 0; if(session.items.open&&event.type==SDL_EVENT_FINGER_DOWN)session.itemClick(x,y);return true; }
     const bool fresh = event.type == SDL_EVENT_FINGER_DOWN || finger.action != hit->action;
     if (fresh)
     {
-        const bool wasMap = session.mapOpen;
+        const bool wasMap = session.mapOpen,wasItems=session.items.open,wasMenu=session.menuOpen;
         const auto now = SDL_GetTicks(); finger = {hit->action, hit->mask, now, now + 300, false};
         androidAction(session, hit->action); finger.fired = true;
         // 画面が切り替わった指は、離されるまで次の画面のボタンを押せない。
-        if(wasMap!=session.mapOpen){
+        if(wasMap!=session.mapOpen||wasItems!=session.items.open||wasMenu!=session.menuOpen){
             for(auto& [id,held]:androidFingers){(void)id;held.blocked=true;held.mask=0;}
             androidTouchPulse={};return true;
         }
-        if(!wasMap && !session.menuOpen)for(unsigned id=0;id<12;++id)if(hit->mask&(1u<<id))androidTouchPulse[id]=2;
+        if(!wasMap && !wasItems && !session.menuOpen)for(unsigned id=0;id<12;++id)if(hit->mask&(1u<<id))androidTouchPulse[id]=2;
     }
     return true;
 }
@@ -290,17 +309,17 @@ inline void androidTick(Player& session)
         }
         androidMenuDirection=direction;
     }else androidMenuDirection=-1;
-    if(session.focused&&!session.menuOpen&&!session.mapOpen&&!session.paused)
+    if(session.focused&&!session.menuOpen&&!session.items.open&&!session.mapOpen&&!session.paused)
         for(unsigned id=0;id<12;++id)if(androidTouchPulse[id]){androidTouchMask|=static_cast<uint16_t>(1u<<id);--androidTouchPulse[id];}
     for (auto& [id, finger] : androidFingers)
     {
         (void)id;
         if(finger.blocked)continue;
-        if (session.mapOpen && finger.action >= 14 && finger.action <= 17 && now >= finger.repeat)
+        if ((session.menuOpen||session.mapOpen||session.items.open) && finger.action >= 14 && finger.action <= 17 && now >= finger.repeat)
         {
             androidAction(session, finger.action); finger.repeat = now + 100;
         }
-        if (!session.menuOpen && !session.mapOpen) androidTouchMask |= finger.mask;
+        if (!session.menuOpen && !session.items.open && !session.mapOpen) androidTouchMask |= finger.mask;
     }
 }
 
@@ -322,6 +341,7 @@ inline void androidDraw(Player& session)
     padCall.check();
     float key = portrait ? std::min(64.0f,width/5.6f) : std::min(68.0f,std::max(44.0f,(width-height*session.aspect)/5.6f));
     if(portrait)key=std::min(key,std::max(32.0f,(height-302)/2.8f));
+    else key=std::min(key,std::max(28.0f,(height-210)/2.8f));
     const float pitch=key*.9f, groupSize=key+2*pitch;
     const float groupY = portrait ? y+height-groupSize-56 : y+(height-groupSize)/2;
     const float shoulderY = portrait ? groupY-52 : std::min(groupY+groupSize+8,y+height-96);
@@ -335,6 +355,18 @@ inline void androidDraw(Player& session)
     if (touch && portrait) available.h = std::max(40.0f,std::min(width/session.aspect,auxiliaryY-12-available.y));
     const float gameWidth = std::min(available.w, available.h * session.aspect);
     androidGameArea = {available.x+(available.w-gameWidth)/2, available.y+(available.h-gameWidth/session.aspect)/2,gameWidth,gameWidth/session.aspect};
+    // SDLの論理表示倍率（整数化を含む）でゲーム矩形の両端を画面座標へ変換する。
+    static SDL_Rect previousMenuArea{-1,-1,0,0};
+    float menuLeft=0,menuTop=0,menuRight=0,menuBottom=0;
+    sdlCheck(SDL_RenderCoordinatesToWindow(renderer,androidGameArea.x,androidGameArea.y,&menuLeft,&menuTop));
+    sdlCheck(SDL_RenderCoordinatesToWindow(renderer,androidGameArea.x+androidGameArea.w,androidGameArea.y+androidGameArea.h,&menuRight,&menuBottom));
+    SDL_Rect menuArea{static_cast<int>(std::round(menuLeft)),static_cast<int>(std::round(menuTop)),
+        static_cast<int>(std::round(menuRight))-static_cast<int>(std::round(menuLeft)),
+        static_cast<int>(std::round(menuBottom))-static_cast<int>(std::round(menuTop))};
+    if(!SDL_RectsEqual(&menuArea,&previousMenuArea)){
+        AndroidCall call;call.env->CallVoidMethod(call.activity,call.method("setFunctionMenuBounds","(IIII)V"),menuArea.x,menuArea.y,menuArea.w,menuArea.h);call.check();
+        previousMenuArea=menuArea;
+    }
     const float rightSpace=x+width-(androidGameArea.x+androidGameArea.w);
     const float compactWidth=std::min(68.0f,std::max(24.0f,(rightSpace-10)/2));
     const float speedWidth=portrait?88:compactWidth, resetWidth=portrait?68:compactWidth;
@@ -355,6 +387,7 @@ inline void androidDraw(Player& session)
             const float auxiliaryWidth = (width-18)/4;
             button({x,auxiliaryY-56,auxiliaryWidth,44}, "保存1",2);
             button({x+auxiliaryWidth+6,auxiliaryY,auxiliaryWidth,44}, session.mapOpen ? "戻る" : "移動",3);
+            button({x+auxiliaryWidth+6,shoulderY,auxiliaryWidth,44},session.items.open?"ゲームへ":"アイテム",8);
             button({x+2*(auxiliaryWidth+6),auxiliaryY,auxiliaryWidth,44}, "機能",1);
             button({x+3*(auxiliaryWidth+6),auxiliaryY-56,auxiliaryWidth,44}, "読込1",4);
             button({left,shoulderY,76,44}, "L",18,1u<<10);
@@ -365,7 +398,8 @@ inline void androidDraw(Player& session)
             const float half=groupWidth/2-4;
             button({left,shoulderY,half,44}, "L",18,1u<<10);
             button({x,y+50,functionWidth,44}, "保存1",2);
-            button({romX,y+50,romWidth,44}, "移動",3);
+            button({romX,y+48,romWidth,24}, "移動",3);
+            button({romX,y+76,romWidth,24},session.items.open?"ゲームへ":"アイテム",8);
             button({right+half+8,shoulderY,half,44}, "R",19,1u<<11);
             button({x+width-speedWidth,y+44,speedWidth,40}, "読込1",4);
         }
@@ -388,6 +422,7 @@ inline void androidDraw(Player& session)
         SDL_RenderTexture(renderer,session.texture,nullptr,&androidGameArea);
         if(session.crtDisplay) session.crtFilter.draw(renderer,androidGameArea,session.height);
     }
+    if(session.items.open)session.drawItems(androidGameArea);
     if (session.mapOpen)
     {
         // 移動先の選択は十字キー、階層はL/R、決定・取消は右・下ボタン。
@@ -397,6 +432,8 @@ inline void androidDraw(Player& session)
         androidText(renderer,x,y+10,(hell?std::string("B777"):"B"+std::to_string(session.mapFloor))+" "+coordinate(session.mapX,"E","W")+" "+coordinate(session.mapY,"N","S"));
         button({x+width-122,y,58,40},"全体",32);
         button({x+width-58,y,58,40},"区画",34);
+        const auto explored=std::count_if(session.dungeonMaps[session.mapFloor-1].begin(),session.dungeonMaps[session.mapFloor-1].end(),[&](const auto& cell){return session.cellExplored(cell);});
+        androidText(renderer,x,y+height-22,"緑:踏破済 暗色:未踏破 "+std::to_string(explored)+"/"+std::to_string(session.dungeonMaps[session.mapFloor-1].size()));
         float mapLeft=x, mapWidth=width, mapBottom=y+height-28;
         if(touch){
             const float left=x,right=x+width-groupSize;
@@ -414,7 +451,6 @@ inline void androidDraw(Player& session)
             else{mapLeft+=groupSize+12;mapWidth-=2*(groupSize+12);}
         }
         androidMapArea={mapLeft+36,y+70,mapWidth-36,std::max(32.0f,mapBottom-y-70)};
-        androidText(renderer,x,y+height-22,session.swapButtons?"十字：座標  L/R：階層  下：移動  右：戻る":"十字：座標  L/R：階層  右：移動  下：戻る");
         const auto& cells = session.dungeonMaps[session.mapFloor-1];
         int minX=127,maxX=-128,minY=127,maxY=-128;
         for(const auto& cell:cells){minX=std::min(minX,cell.x);maxX=std::max(maxX,cell.x);minY=std::min(minY,cell.y);maxY=std::max(maxY,cell.y);}
@@ -431,7 +467,8 @@ inline void androidDraw(Player& session)
         {
             SDL_FRect box{androidMapGrid.x+(cell.x-minX)*size,androidMapGrid.y+(maxY-cell.y)*size,size,size};
             if(box.x+size<androidMapArea.x||box.x>androidMapArea.x+androidMapArea.w||box.y+size<androidMapArea.y||box.y>androidMapArea.y+androidMapArea.h)continue;
-            SDL_SetRenderDrawColor(renderer,32,37,32,255);SDL_RenderFillRect(renderer,&box);
+            const bool explored=session.cellExplored(cell);
+            SDL_SetRenderDrawColor(renderer,explored?42:32,explored?112:37,explored?66:32,255);SDL_RenderFillRect(renderer,&box);
             SDL_SetRenderDrawColor(renderer,65,73,65,255);SDL_RenderRect(renderer,&box);
             auto wall=[&](unsigned type,float ax,float ay,float bx,float by){
                 if(!type)return;

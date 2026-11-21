@@ -42,6 +42,9 @@ inline bool renderOutputSize(SDL_Renderer* renderer, int* width, int* height) { 
 #include <vector>
 #include <cwctype>
 
+#include "item_menu.h"
+#include "item_text.h"
+
 namespace fs = std::filesystem;
 
 std::string utf8(const fs::path& path)
@@ -167,6 +170,8 @@ struct Core
     bool (__cdecl* set_mixed_alignment)(bool) = nullptr;
     bool (__cdecl* set_reward_multiplier)(unsigned) = nullptr;
     bool (__cdecl* can_edit_character)() = nullptr;
+    bool (__cdecl* can_edit_items)() = nullptr;
+    bool (__cdecl* request_item_recalc)(unsigned) = nullptr;
     bool (__cdecl* request_gold)(unsigned, uint64_t) = nullptr;
     bool (__cdecl* request_experience)(unsigned, unsigned) = nullptr;
     bool (__cdecl* request_alignment)(unsigned, unsigned) = nullptr;
@@ -224,6 +229,8 @@ struct Core
         set_mixed_alignment = reinterpret_cast<decltype(set_mixed_alignment)>(GetProcAddress(module, "wiizv_set_mixed_alignment"));
         set_reward_multiplier = reinterpret_cast<decltype(set_reward_multiplier)>(GetProcAddress(module, "wiizv_set_reward_multiplier"));
         can_edit_character = reinterpret_cast<decltype(can_edit_character)>(GetProcAddress(module, "wiizv_can_edit_character"));
+        can_edit_items = reinterpret_cast<decltype(can_edit_items)>(GetProcAddress(module, "wiizv_can_edit_items"));
+        request_item_recalc = reinterpret_cast<decltype(request_item_recalc)>(GetProcAddress(module, "wiizv_request_item_recalc"));
         request_gold = reinterpret_cast<decltype(request_gold)>(GetProcAddress(module, "wiizv_request_gold"));
         request_experience = reinterpret_cast<decltype(request_experience)>(GetProcAddress(module, "wiizv_request_experience"));
         request_alignment = reinterpret_cast<decltype(request_alignment)>(GetProcAddress(module, "wiizv_request_alignment"));
@@ -478,7 +485,7 @@ struct Player
         else menuLoad = direction > 0;
     }
 
-    int menuRows() const { return characterMenu ? 14 : effectsMenu ? static_cast<int>(EFFECT_KEYS.size()) + 1 : 15; }
+    int menuRows() const { return characterMenu ? 14 : effectsMenu ? static_cast<int>(EFFECT_KEYS.size()) + 1 : 16; }
     int menuRowHeight() const { return characterMenu ? 24 : effectsMenu ? 32 : 22; }
 
     void toggleButtons()
@@ -530,7 +537,8 @@ struct Player
     {
         // 同一上流コミットの旧配布コアだけは、復元互換性を検証したうえで受け入れる。
         auto expectedCore = coreId;
-        constexpr std::array<std::string_view, 23> LEGACY_CORES{
+        constexpr std::array<std::string_view, 24> LEGACY_CORES{
+            "6c7e65e626f3b1d6b7ca667f0f7041286d3fe91ca059c6a20165b0706d183afc",
             "d5e144475deeb22d152d1e28a2649f5a53092a65c9ec204c6f5d97968f30f139",
             "9f42fb5ef81ad89adb57a47643f9f62badde4ca0c3c8a6709b98649cbf45cd7e",
             "92869c40012d003d8c5194824e14b3270db9f28235ce769064d6f967304a4309",
@@ -592,6 +600,7 @@ struct Player
         try { applyStateFile(readFile(path)); }
         catch (const std::exception& error) { throw std::runtime_error(std::string(error.what()) + "\n" + utf8(path)); }
         menuOpen = false;
+        items.open = false;
         paused = false;
         inputBlocked = true;
         showNotice("Loaded slot " + std::to_string(slot));
@@ -599,6 +608,7 @@ struct Player
 
     void toggleMenu()
     {
+        if(items.open){closeItems();return;}
         if (!menuOpen)
         {
             effectsMenu = false;
@@ -650,6 +660,7 @@ struct Player
         else if (menuRow == 11) toggleCrtDisplay();
         else if (menuRow == 12) openCharacterMenu();
         else if (menuRow == REWARD_MENU_ROW) changeBattleRewardMultiplier(1);
+        else if (menuRow == 14) openItems();
         else toggleMenu();
     }
 
@@ -752,6 +763,8 @@ struct Player
     void executeAlignmentChange() { executeCharacterEdit(CharacterEdit::Alignment); }
     void executeLearnAllSpells() { executeCharacterEditDirect(CharacterEdit::Spells); }
 
+    #include "item_player.inc"
+
     void executeCharacterEditDirect(CharacterEdit kind)
     {
         require(!stateRecoveryFailed&&supportsEffects()&&characterMenu&&core.can_edit_character&&core.can_edit_character(),"城の施設または迷宮の入力待ちで編集してください。");
@@ -851,6 +864,9 @@ struct Player
         for (auto [id, pad] : gamepads) { (void)id; SDL_CloseGamepad(pad); }
         if (audio) SDL_DestroyAudioStream(audio);
         if (texture) SDL_DestroyTexture(texture);
+#ifdef _WIN32
+        clearItemText();
+#endif
         if (renderer) SDL_DestroyRenderer(renderer);
         if (window) SDL_DestroyWindow(window);
     }
@@ -1018,6 +1034,12 @@ struct Player
         return {outputWidth - 224.0f + (200 - size * (maxX - minX + 1)) / 2, 144 + (200 - size * (maxY - minY + 1)) / 2, size, minX, maxY};
     }
 
+    bool cellExplored(const DungeonCell& cell) const
+    {
+        const auto* ram = gameRam();
+        return ram && isDungeonCellExplored({ram, core.get_memory_size(RETRO_MEMORY_SYSTEM_RAM)}, mapFloor, cell);
+    }
+
     void drawMap()
     {
         int outputWidth = 0, outputHeight = 0;
@@ -1026,7 +1048,9 @@ struct Player
         SDL_FRect background{0, 36, static_cast<float>(outputWidth), outputHeight - 36.0f};
         sdlCheck(SDL_RenderFillRect(renderer, &background));
         sdlCheck(SDL_SetRenderDrawColor(renderer, 230, 235, 240, 255));
-        const auto title = "MOVE  B" + std::to_string(mapFloor) + "   X: " + std::to_string(mapX) + "  Y: " + std::to_string(mapY);
+        const auto explored = std::count_if(dungeonMaps[mapFloor - 1].begin(), dungeonMaps[mapFloor - 1].end(),
+            [&](const auto& cell) { return cellExplored(cell); });
+        const auto title = "MOVE  B" + std::to_string(mapFloor) + "   X: " + std::to_string(mapX) + "  Y: " + std::to_string(mapY) + "   Explored: " + std::to_string(explored) + "/" + std::to_string(dungeonMaps[mapFloor - 1].size());
         sdlCheck(SDL_RenderDebugText(renderer, 24, 48, title.c_str()));
         sdlCheck(SDL_RenderDebugText(renderer, 24, 67, "Arrows / left stick: XY   Q/W or LB/RB: floor"));
         sdlCheck(SDL_RenderDebugText(renderer, 24, 84, swapButtons ? "Enter / pad bottom: Move (overwrites slot 1)   Esc / pad right: Back" : "Enter / pad right: Move (overwrites slot 1)   Esc / pad bottom: Back"));
@@ -1043,7 +1067,8 @@ struct Player
             const bool selected = cell.x == mapX && cell.y == mapY;
             const bool current = ram[0xb7] == mapFloor && static_cast<int8_t>(ram[0xb5]) == cell.x && static_cast<int8_t>(ram[0xb6]) == cell.y;
             SDL_FRect square{x, y, size, size};
-            SDL_SetRenderDrawColor(renderer, selected ? 210 : current ? 45 : 38, selected ? 160 : current ? 155 : 55, selected ? 45 : current ? 155 : 76, 255);
+            const bool explored = cellExplored(cell);
+            SDL_SetRenderDrawColor(renderer, current ? 45 : explored ? 42 : 38, current ? 155 : explored ? 112 : 55, current ? 155 : explored ? 66 : 76, 255);
             SDL_RenderFillRect(renderer, &square);
             if (cell.event && size >= 8)
             {
@@ -1086,7 +1111,7 @@ struct Player
             if (value % 5 == 0) SDL_RenderDebugText(renderer, 4, layout.y + row * 20 + 6, std::to_string(value).c_str());
         }
         SDL_SetRenderDrawColor(renderer, 230, 235, 240, 255);
-        SDL_RenderDebugText(renderer, 24, outputHeight - 49.0f, "N: up / Y+   Cyan: current position   Yellow: destination   Blue wall: door");
+        SDL_RenderDebugText(renderer, 24, outputHeight - 49.0f, "Green: explored  Dark: unexplored  Cyan: current  Yellow: destination");
     }
 
     void drawCharacterName(float x, float y)
@@ -1210,6 +1235,7 @@ struct Player
                         row == 10 ? std::string("Mixed alignment party: ") + (mixedAlignment ? "ON" : "OFF") :
                         row == 11 ? std::string("CRT display: ") + (crtDisplay ? "ON" : "OFF") :
                         row == 12 ? std::string("Character edit >") :
+                        row == 14 ? std::string("Party items >") :
                         row == REWARD_MENU_ROW ? std::string("Battle EXP / GOLD: ") +
                             (!supportsBattleRewards() ? "Unavailable" : rewardMultiplierIndex == 0 ? "OFF" :
                                 "x" + std::to_string(1u << rewardMultiplierIndex)) : std::string("Resume");
@@ -1219,6 +1245,11 @@ struct Player
             sdlCheck(SDL_RenderDebugText(renderer, box.x + 20, box.y + box.h - 28, characterMenu ? "Apply saves a separate pre-edit backup." : effectsMenu ? "OFF: spell effects cleared / MP returns to normal limits." : "F2: speed   F5: save slot   F8: load slot"));
         }
         if (mapOpen) drawMap();
+        if (items.open) {
+            float available=static_cast<float>(std::max(1,windowHeight-36));
+            float w=std::min(static_cast<float>(windowWidth),available*aspect);
+            drawItems({(windowWidth-w)/2,36+(available-w/aspect)/2,w,w/aspect});
+        }
         if (!notice.empty() && SDL_GetTicks() < noticeUntil)
         {
             sdlCheck(SDL_SetRenderDrawColor(renderer, 20, 30, 44, 255));
@@ -1314,6 +1345,7 @@ bool environment(unsigned command, void* data)
 
 void video(const void* data, unsigned width, unsigned height, size_t pitch)
 {
+    if(player->items.open)return; // Native item recalculation must not replace the paused image.
     if (!data) return;
     if (data == RETRO_HW_FRAME_BUFFER_VALID || width == 0 || height == 0 || width > 2048 || height > 2048)
     {
@@ -1346,7 +1378,7 @@ void video(const void* data, unsigned width, unsigned height, size_t pitch)
 
 size_t audioBatch(const int16_t* data, size_t frames)
 {
-    if(!player->smoke&&player->menuOpen)return frames;
+    if(player->items.open||(!player->smoke&&player->menuOpen))return frames;
     if (player->recordAudio) player->recordedAudio.insert(player->recordedAudio.end(), data, data + frames * 2);
     if (player->audio)
     {
@@ -1374,6 +1406,7 @@ void audioSample(int16_t left, int16_t right)
 
 int16_t inputState(unsigned port, unsigned device, unsigned index, unsigned id)
 {
+    if(player->items.open)return 0;
     if (player->smoke && player->replayInput && port == 0 && device == RETRO_DEVICE_JOYPAD && index == 0 && id < 16)
         return (player->replayButtons >> id) & 1;
     if (port || device != RETRO_DEVICE_JOYPAD || index || !player->focused || player->paused || player->menuOpen || player->mapOpen || player->inputBlocked) return 0;
@@ -1429,7 +1462,7 @@ uint16_t readPhysicalButtons(Player& session)
 
 void sampleGameInput(Player& session, uint16_t physical, uint64_t nowMs)
 {
-    if (!session.focused || session.paused || session.menuOpen || session.mapOpen || session.inputBlocked)
+    if (!session.focused || session.paused || session.menuOpen || session.items.open || session.mapOpen || session.inputBlocked)
     {
         session.gameButtons = 0;
         session.inputRepeat.reset();
@@ -1521,6 +1554,7 @@ void loadRom(Player& session, const fs::path& path)
     session.paused = false;
     session.menuOpen = false;
     session.mapOpen = false;
+    session.items.open = false;
     if (session.core.cancel_move) session.core.cancel_move();
     if (session.core.cancel_gold) session.core.cancel_gold();
     session.dungeonMaps = {};
@@ -1545,6 +1579,32 @@ void loadRom(Player& session, const fs::path& path)
 
 bool handleAction(Player& session, const SDL_Event& event)
 {
+    if(session.items.open){
+        if(!session.focused)return true;
+        if(event.type==SDL_EVENT_KEY_DOWN){
+            auto key=event.key.scancode;
+            if(key==SDL_SCANCODE_UP)session.itemCommand(0);
+            if(key==SDL_SCANCODE_DOWN)session.itemCommand(1);
+            if(key==SDL_SCANCODE_LEFT)session.itemCommand(2);
+            if(key==SDL_SCANCODE_RIGHT)session.itemCommand(3);
+            if(!event.key.repeat){
+                if(key==SDL_SCANCODE_B||key==SDL_SCANCODE_Q)session.itemCommand(4);
+                if(key==SDL_SCANCODE_N||key==SDL_SCANCODE_W)session.itemCommand(5);
+                if(key==SDL_SCANCODE_RETURN||key==(session.swapButtons?SDL_SCANCODE_Z:SDL_SCANCODE_X))session.itemCommand(6);
+                if(key==SDL_SCANCODE_ESCAPE||key==SDL_SCANCODE_F4||key==(session.swapButtons?SDL_SCANCODE_X:SDL_SCANCODE_Z))session.itemCommand(7);
+            }
+        }
+        if(event.type==SDL_EVENT_GAMEPAD_BUTTON_DOWN){
+            auto b=event.gbutton.button;
+            if(b==SDL_GAMEPAD_BUTTON_LEFT_SHOULDER)session.itemCommand(4);
+            if(b==SDL_GAMEPAD_BUTTON_RIGHT_SHOULDER)session.itemCommand(5);
+            if(b==(session.swapButtons?SDL_GAMEPAD_BUTTON_SOUTH:SDL_GAMEPAD_BUTTON_EAST))session.itemCommand(6);
+            if(b==(session.swapButtons?SDL_GAMEPAD_BUTTON_EAST:SDL_GAMEPAD_BUTTON_SOUTH))session.itemCommand(7);
+        }
+        if(event.type==SDL_EVENT_MOUSE_BUTTON_DOWN&&event.button.button==SDL_BUTTON_LEFT){float x=0,y=0;SDL_RenderCoordinatesFromWindow(session.renderer,event.button.x,event.button.y,&x,&y);session.itemClick(x,y);}
+        return true;
+    }
+
     if (session.mapOpen)
     {
         if (!session.focused) return true;
@@ -1589,6 +1649,7 @@ bool handleAction(Player& session, const SDL_Event& event)
     if (event.type == SDL_EVENT_KEY_DOWN && !event.key.repeat)
     {
         const auto key = event.key.scancode;
+        if (key == SDL_SCANCODE_F4) { session.openItems(); return true; }
         if (key == SDL_SCANCODE_F3) { session.openMap(); return true; }
         if (key == SDL_SCANCODE_F1) { session.toggleMenu(); return true; }
         if (key == SDL_SCANCODE_F2) { session.setSpeed((session.speedIndex + 1) % static_cast<int>(GAME_SPEEDS.size())); return true; }
@@ -1671,7 +1732,7 @@ void pollExtraControls(Player& session)
         const auto trigger = SDL_GetGamepadAxis(pad, SDL_GAMEPAD_AXIS_LEFT_TRIGGER);
         const auto moveTrigger = SDL_GetGamepadAxis(pad, SDL_GAMEPAD_AXIS_RIGHT_TRIGGER);
         bool allowExtraAction=session.focused&&!session.mapOpen;
-        allowExtraAction=allowExtraAction&&!session.menuOpen;
+        allowExtraAction=allowExtraAction&&!session.menuOpen&&!session.items.open;
         bool& moveHeld = session.moveTriggerHeld[id];
         if (moveTrigger < 12000) moveHeld = false;
         if (moveTrigger > 20000 && !moveHeld)
@@ -1683,7 +1744,7 @@ void pollExtraControls(Player& session)
                 catch (const std::exception& error) { session.reportActionError(error); }
             }
         }
-        if (session.mapOpen && session.focused)
+        if ((session.mapOpen || session.items.open) && session.focused)
         {
             const auto axisX = SDL_GetGamepadAxis(pad, SDL_GAMEPAD_AXIS_LEFTX);
             const auto axisY = SDL_GetGamepadAxis(pad, SDL_GAMEPAD_AXIS_LEFTY);
@@ -1712,13 +1773,14 @@ void pollExtraControls(Player& session)
         held |= trigger > 12000;
         held |= moveTrigger > 12000;
     }
-    if (session.mapOpen && session.focused)
+    if ((session.mapOpen || session.items.open) && session.focused)
     {
         const auto now = SDL_GetTicks();
         const bool changed = mapDirectionX != session.mapStickX || mapDirectionY != session.mapStickY;
         if ((mapDirectionX || mapDirectionY) && (changed || now >= session.mapRepeatAt))
         {
-            if (mapDirectionX) session.moveMapCursor(mapDirectionX, 0);
+            if(session.items.open)session.items.move(mapDirectionX,-mapDirectionY);
+            else if (mapDirectionX) session.moveMapCursor(mapDirectionX, 0);
             else session.moveMapCursor(0, mapDirectionY);
             session.mapRepeatAt = now + (changed ? 300 : 100);
         }
@@ -1746,6 +1808,7 @@ void pollExtraControls(Player& session)
 #include "../tests/gold_checks.h"
 #include "../tests/experience_checks.h"
 #include "../tests/character_alignment_checks.h"
+#include "../tests/item_checks.h"
 
 int run(const std::vector<std::wstring>& args)
 {
@@ -1775,7 +1838,7 @@ int run(const std::vector<std::wstring>& args)
     bool checkCrt = false, resumeCrt = false;
     bool checkGold = false, resumeGold = false;
     bool checkExperience = false, resumeExperience = false;
-    bool checkCharacterAlignment = false, resumeCharacterAlignment = false;
+    bool checkCharacterAlignment = false, resumeCharacterAlignment = false, checkItems=false;
     for (size_t i = 1; i < args.size(); ++i)
     {
         if (args[i] == L"--smoke") session.smoke = true;
@@ -1800,6 +1863,7 @@ int run(const std::vector<std::wstring>& args)
         else if (args[i] == L"--gold-resume-check") resumeGold = true;
         else if (args[i] == L"--experience-check") checkExperience = true;
         else if (args[i] == L"--experience-resume-check") resumeExperience = true;
+        else if(args[i]==L"--item-check")checkItems=true;
         else if (args[i] == L"--character-alignment-check") checkCharacterAlignment = true;
         else if (args[i] == L"--character-alignment-resume-check") resumeCharacterAlignment = true;
         else if (args[i] == L"--core" && i + 1 < args.size()) corePath = args[++i];
@@ -1828,7 +1892,7 @@ int run(const std::vector<std::wstring>& args)
         session.dataDirectory = androidString("dataDirectory");
 #endif
     }
-    require((!checkStates && !resumeStates && !checkSpeed && !checkInput && !checkMovement && !checkEffects && !resumeEffects && !checkMp && !resumeMp && !checkBonus && !resumeBonus && !checkLogo && !resumeLogo && !checkAlignment && !resumeAlignment && !checkCrt && !resumeCrt && !checkGold && !resumeGold && !checkExperience && !resumeExperience && !checkCharacterAlignment && !resumeCharacterAlignment) || session.smoke, "検証には--smokeが必要です。");
+    require((!checkItems && !checkStates && !resumeStates && !checkSpeed && !checkInput && !checkMovement && !checkEffects && !resumeEffects && !checkMp && !resumeMp && !checkBonus && !resumeBonus && !checkLogo && !resumeLogo && !checkAlignment && !resumeAlignment && !checkCrt && !resumeCrt && !checkGold && !resumeGold && !checkExperience && !resumeExperience && !checkCharacterAlignment && !resumeCharacterAlignment) || session.smoke, "検証には--smokeが必要です。");
     require((replayPath.empty() && ramDump.empty() && startState.empty()) || session.smoke, "解析用引数には--smokeが必要です。");
     if (!replayPath.empty())
     {
@@ -2044,16 +2108,16 @@ int run(const std::vector<std::wstring>& args)
 #ifdef __ANDROID__
         if (androidBackground && !session.smoke) { SDL_Delay(50); continue; }
 #endif
-        if(!session.smoke&&session.menuOpen!=menuAudioPaused){
+        if(!session.smoke&&(session.menuOpen||session.items.open)!=menuAudioPaused){
             SDL_ClearAudioStream(session.audio);
-            if(session.menuOpen)SDL_PauseAudioStreamDevice(session.audio);else SDL_ResumeAudioStreamDevice(session.audio);
-            menuAudioPaused=session.menuOpen;
+            if(session.menuOpen||session.items.open)SDL_PauseAudioStreamDevice(session.audio);else SDL_ResumeAudioStreamDevice(session.audio);
+            menuAudioPaused=session.menuOpen||session.items.open;
         }
 #ifdef __ANDROID__
         if (!session.smoke) androidTick(session);
 #endif
         pollExtraControls(session);
-        if (!session.stateRecoveryFailed && ((!session.paused && !session.menuOpen && !session.mapOpen && session.focused) || session.smoke))
+        if (!session.stateRecoveryFailed && ((!session.paused && !session.menuOpen && !session.items.open && !session.mapOpen && session.focused) || session.smoke))
         {
             if (auto command = replay.find(frames); command != replay.end()) session.replayButtons = command->second;
             sampleGameInput(session, readPhysicalButtons(session), SDL_GetTicks());
@@ -2062,7 +2126,7 @@ int run(const std::vector<std::wstring>& args)
             ++frames;
         }
 #ifdef __ANDROID__
-        if(session.smoke||!session.menuOpen)session.draw();
+        session.draw();
 #else
         session.draw();
 #endif
@@ -2144,6 +2208,7 @@ int run(const std::vector<std::wstring>& args)
     if (resumeGold) runGoldResumeChecks(session);
     if (checkExperience) runExperienceChecks(session);
     if (resumeExperience) runExperienceResumeChecks(session);
+    if(checkItems)runItemChecks(session);
     if (checkCharacterAlignment) runCharacterAlignmentChecks(session);
     if (resumeCharacterAlignment) runCharacterAlignmentResumeChecks(session);
     return 0;

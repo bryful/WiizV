@@ -10,7 +10,15 @@ struct DungeonCell
 {
     int x, y;
     uint8_t walls, flags, event;
+    uint16_t explorationIndex; // 区画番号 * 64 + localY * 8 + localX（壁配列とはYが逆）
 };
+
+// 原作の踏破ビット。WRAM 7E:DC00（通常セーブ 70:1900）を読み取り専用で参照する。
+inline bool isDungeonCellExplored(std::span<const uint8_t> ram, int floor, const DungeonCell& cell)
+{
+    return floor >= 1 && floor <= 8 && cell.explorationIndex < 1024 && ram.size() >= 0xe000
+        && (ram[0xdc00 + cell.explorationIndex] & (1u << (floor - 1))) != 0;
+}
 
 using DungeonFloor = std::vector<DungeonCell>;
 
@@ -97,7 +105,8 @@ inline std::array<DungeonFloor, 8> readDungeonMaps(std::span<const uint8_t> rom)
                     const size_t index = base + (7 - y) * 8 + x;
                     // ゲームの範囲外判定と同じ岩盤フラグ。イベント番号や壁は移動制限に使わない。
                     if (flags[index] & 0x20) continue;
-                    floors[floor].push_back({originX + x, originY + y, map[64 + index], flags[index], events[index]});
+                    floors[floor].push_back({originX + x, originY + y, map[64 + index], flags[index], events[index],
+                        static_cast<uint16_t>(block * 64 + y * 8 + x)});
                 }
         }
         if (floors[floor].empty()) throw std::runtime_error("階層に移動できるマスがありません。");

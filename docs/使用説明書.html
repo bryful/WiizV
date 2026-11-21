@@ -7,7 +7,7 @@
 :root{color-scheme:light}*{box-sizing:border-box}body{margin:0;background:#eef2f5;color:#182735;font:16px/1.85 "Yu Gothic UI","Meiryo",sans-serif}main{max-width:980px;margin:auto;padding:40px 44px 64px;background:white}header{border-bottom:4px solid #39bfa7;padding-bottom:24px;display:flex;gap:28px;align-items:center}header img{width:148px;border-radius:20px}h1{margin:0;font-size:38px}h2{margin-top:40px;color:#003e4d;border-bottom:1px solid #ccd8df;padding-bottom:8px}h3{margin-top:26px}p{margin:12px 0}nav{padding:18px 24px;background:#edf6f5;margin-top:24px}a{color:#006e76}table{width:100%;border-collapse:collapse;margin:18px 0}th,td{border:1px solid #d2dce1;padding:9px 13px;text-align:left}th{background:#edf4f5}code{font-family:Consolas,monospace;overflow-wrap:anywhere;background:#edf1f4;padding:2px 5px}.note{border-left:4px solid #e2ba38;background:#fff9e8;padding:12px 18px}footer{margin-top:44px;font-size:14px;color:#526471}@media(max-width:640px){main{padding:24px 18px}header{gap:16px}header img{width:90px}h1{font-size:30px}th,td{padding:8px;font-size:14px}}@media print{body{background:white}main{padding:0;max-width:none}nav{display:none}h2,h3{break-after:avoid}tr{break-inside:avoid}a{color:inherit;text-decoration:none}}
 </style>
 <main>
-<header><img src="wiizv-icon.png" alt="黄色のVが付いたWiizVのカートリッジアイコン"><div><h1>WiizV 使用説明書</h1><p>SFC版 Wizardry V 用プレイヤー<br>Windows／Android・配布版 2026年10月25日</p></div></header>
+<header><img src="wiizv-icon.png" alt="黄色のVが付いたWiizVのカートリッジアイコン"><div><h1>WiizV 使用説明書</h1><p>SFC版 Wizardry V 用プレイヤー<br>Windows／Android・配布版 2026年11月21日</p></div></header>
 <p>5スロットの保存・読込、音声を通常速度に保つ倍速、全階層マップからの移動、常時効果、キャラクター編集が利用できます。</p>
 <nav><a href="#install">導入</a> ／ <a href="#controls">操作</a> ／ <a href="#save">保存・読込</a> ／ <a href="#speed">倍速</a> ／ <a href="#map">移動マップ</a> ／ <a href="#effects">常時効果</a> ／ <a href="#edit">キャラクター編集</a> ／ <a href="#files">保存先・困ったとき</a></nav>
 <h2 id="install">1. 導入</h2>
@@ -16,7 +16,7 @@
 <ol><li><code>Windows</code>フォルダーを、DLL・licensesを含めて任意の場所へコピーします。</li><li><code>WiizV.exe</code>を起動し、ROMを選択します。</li><li>実行ファイル横の<code>Rom</code>にROMを1つ置くと、自動で読み込みます。前回選択したROMの場所も記憶します。</li></ol>
 <p>64ビットWindows向けです。実行ファイルだけを別の場所へ移動せず、同梱DLLと一緒に配置してください。必要なVisual C++ v14ランタイム（x64）が未導入の場合は、<a href="https://learn.microsoft.com/en-us/cpp/windows/latest-supported-vc-redist/">Microsoft公式案内</a>から導入してください。</p>
 <h3>Android</h3>
-<ol><li><code>Android/WiizV-0.2.6-release.apk</code>を端末へコピーしてインストールします。必要に応じて、APKを開くアプリのインストール許可を有効にします。</li><li>WiizVを起動し、「保存フォルダを選ぶ」でDocumentsまたはその中のWiizVを選び、アクセスを許可します。</li><li>所有するROMを選びます。Documents/WiizV直下、またはそのRomフォルダーに置いたROMも候補に表示します。</li></ol>
+<ol><li><code>Android/WiizV-0.2.11-release.apk</code>を端末へコピーしてインストールします。必要に応じて、APKを開くアプリのインストール許可を有効にします。</li><li>WiizVを起動し、「保存フォルダを選ぶ」でDocumentsまたはその中のWiizVを選び、アクセスを許可します。</li><li>所有するROMを選びます。Documents/WiizV直下、またはそのRomフォルダーに置いたROMも候補に表示します。</li></ol>
 <p>Android 6以降のARM64端末向けです。x86_64エミュレーターにも対応します。APKはWiizV専用のRelease鍵で署名しています。同じRelease署名の更新版を上書きインストールできます。</p>
 <div class="note">旧debug署名版からは上書きできません。Documents/WiizV全体を別の場所へコピーして控え、旧アプリをアンインストールしてからRelease版をインストールしてください。Documents/WiizV自体は削除せず、起動後に同じ保存フォルダーとROMを選び直します。以後の同じRelease署名での更新ではアンインストールは不要です。</div>
 <h2 id="controls">2. 操作</h2>
@@ -34,6 +34,7 @@
 <p>1倍・1.5倍・2倍・3倍・4倍を切り替えます。BGMのテンポとSEの再生速度は通常のまま、SEの発生時刻はゲーム進行に従います。倍率の切替時は短く音が途切れる場合があります。</p>
 <p>倍速中は方向入力の長押しを補正します。決定などを続けて押す場合は、一度ボタンを離してください。倍率は次回起動時も維持します。</p>
 <h2 id="map">5. 移動マップ</h2>
+<p>原作セーブの踏破情報を使い、緑で踏破済み、暗色で未踏破を表示します。水色は現在地、黄色の枠は移動先です。階層ごとの踏破マス数も表示します。通常セーブ・ステートの読込に追従します。Windows・Android共通です。</p>
 <p>探索中に「移動」・F3・RTで開きます。階段の確認画面からも利用できます。城・キャンプ・戦闘中などでは利用できません。</p>
 <ul><li>十字キー／左スティック：座標を選択。</li><li>L／R：階層を変更（WindowsではQ／Wも使用可能）。</li><li>AndroidではX／Yで拡大・縮小、SELECTで全体表示。「全体」「区画」も利用できます。</li><li>決定で選択位置へ移動、取消で元の画面へ戻ります。決定・取消はAB交換を反映します。</li></ul>
 <p>未探索の場所も表示します。マップデータに存在するマスへ移動でき、イベント等による通行制限は受けません。移動前にはスロット1を上書き保存します。保存できなければ移動しません。元へ戻す場合はスロット1を読み込んでください。</p>
@@ -47,6 +48,11 @@
 <ol><li>対象のキャラクターを左右で選びます。日本語の名前・職業・属性を確認してください。</li><li>変更する値を選び、対応する実行項目で決定します。</li><li>保存完了後、続けて別の編集を実行できます。</li></ol>
 <table><tr><th>編集項目</th><th>内容</th></tr><tr><td>GOLD加算</td><td>加算額を選択して実行。保存可能な上限は999,999,999,999です。</td></tr><tr><td>経験値加算</td><td>現在の経験値から次の＋1・＋2・＋3段階目の必要経験値まで加算します。複数回実行できます。実際のレベルは変更しません。後から原作の宿屋でレベルアップします。</td></tr><tr><td>種族・職業・属性変更</td><td>変更先を選び、対応する項目で適用します。能力値・レベル・習得呪文は維持されます。属性変更後、酒場の加入候補は一覧を開き直して更新してください。</td></tr><tr><td>Learn all spells／全てのスペルを覚える</td><td>魔術師・僧侶の全段階を習得済みにします。MP・職業・レベルは変更しません。</td></tr><tr><td>Restore pre-edit game state／編集前へ戻す</td><td>直前の編集前のゲーム状態全体へ戻します。対象の数値以外の進行も、その時点へ戻ります。</td></tr></table>
 <p>編集内容は通常セーブにも反映します。編集前のバックアップは<code>States/&lt;ROM名&gt;.before-edit.wvs</code>です。編集ごとに上書きし、5つのステートスロットは変更しません。</p>
+<h3>パーティーのアイテム編集</h3>
+<p>WindowsはF4または機能メニューのParty items、Androidは移動の下の「アイテム」から開きます。１人以上のパーティーがあれば、城・酒場・商店・訓練場・迷宮などで使用できます。戦闘中・データ更新中は開けません。編集中はゲームとBGMを停止します。</p>
+<p>左右２人の名前・所持品８枠を表示し、装備中は＊を付けます。左右で操作側、上下で品を選択。B／Nキー・L／R・名前の矢印で人物を切り替えます。決定で装備／解除・移動・削除・上下への並べ替え、戻るで取消またはゲームへ戻ります。ABXY交換も反映します。削除確認の初期選択は「いいえ」です。</p>
+<p>未識別品の収集は他の全員から操作側へ、未装備品の一括移動は反対側へ、空き枠分だけ移します。装備品・呪いの品は移動・削除せず、未識別品と職業条件を満たさない品は装備できません。呪われた装備の解除・置換もできません。属性違いなどによる呪いは原作に従います。</p>
+<p>更新前のバックアップを保存し、原作の能力再計算・二重セーブ・チェックサムを更新します。失敗した場合は全員の変更を取り消します。直前の編集はキャラクター編集の「編集前に戻す」で復元できます。</p>
 <h2 id="files">8. 保存先・困ったとき</h2>
 <table><tr><th>環境</th><th>保存先</th></tr><tr><td>Windows</td><td><code>%APPDATA%\WiizV</code>（エクスプローラーのアドレス欄へ入力）</td></tr><tr><td>Android</td><td>起動時に選んだWiizVフォルダー（通常はDocuments/WiizV）</td></tr></table>
 <p><code>Saves</code>に通常セーブ、<code>States</code>にステート、<code>settings.ini</code>に設定を保存します。ROM名が<code>Wizardry5sfc.smc</code>の場合、通常セーブは<code>Wizardry5sfc.srm</code>です。保存データを引き継ぐ場合はROM名も揃えてください。同名で内容の異なるROMのデータは混用しません。</p>
