@@ -27,6 +27,22 @@ inline void runInputChecks(Player& session)
     {
         session.applyStateFile(baseline);
         session.setSpeed(speed);
+        session.toggleMenu();
+        session.menuRow = 0;
+        SDL_Event arrow{};
+        arrow.type = SDL_EVENT_KEY_DOWN;
+        arrow.key.scancode = SDL_SCANCODE_DOWN;
+        handleAction(session, arrow);
+        handleAction(session, arrow);
+        require(session.menuRow == 1, "機能メニューで重複キー通知が二重移動になりました。");
+        arrow.type = SDL_EVENT_KEY_UP;
+        handleAction(session, arrow);
+        arrow.type = SDL_EVENT_KEY_DOWN;
+        handleAction(session, arrow);
+        require(session.menuRow == 2, "キーを離した後の機能メニュー入力が無効です。");
+        arrow.type = SDL_EVENT_KEY_UP;
+        handleAction(session, arrow);
+        session.toggleMenu();
         session.inputBlocked = false;
         auto cursor = ram[0x33];
         int changes = 0;

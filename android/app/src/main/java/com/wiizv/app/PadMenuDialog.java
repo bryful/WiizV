@@ -56,6 +56,8 @@ final class PadMenuDialog extends Dialog {
         Rect area=activity.functionMenuBounds();
         if(getWindow()==null||area.isEmpty())return;
         WindowManager.LayoutParams layout=getWindow().getAttributes();
+        if(layout.gravity==(Gravity.TOP|Gravity.LEFT)&&layout.x==area.left&&layout.y==area.top
+            &&layout.width==area.width()&&layout.height==area.height())return;
         layout.gravity=Gravity.TOP|Gravity.LEFT;layout.x=area.left;layout.y=area.top;
         layout.width=area.width();layout.height=area.height();getWindow().setAttributes(layout);
     }
@@ -106,7 +108,7 @@ final class PadMenuDialog extends Dialog {
             case KeyEvent.KEYCODE_BUTTON_A:action=swap?0:1;break;case KeyEvent.KEYCODE_BUTTON_B:action=swap?1:0;break;
             default:break;
         }
-        if(action>=0){if(event.getAction()==KeyEvent.ACTION_DOWN&&(action>=2||event.getRepeatCount()==0))navigate(action);return true;}
+        if(action>=0){if(event.getAction()==KeyEvent.ACTION_DOWN&&((action==2||action==3)||event.getRepeatCount()==0))navigate(action);return true;}
         return super.dispatchKeyEvent(event);
     }
     @Override public boolean dispatchGenericMotionEvent(MotionEvent event){

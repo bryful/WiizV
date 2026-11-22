@@ -333,6 +333,7 @@ struct Player
     Uint64 noticeUntil = 0;
     fs::path uiScreenshot;
     int speedIndex = 0;
+    uint8_t menuDirectionKeys = 0;
     bool recordAudio = false;
     std::vector<int16_t> recordedAudio;
     bool replayInput = false;
@@ -1579,6 +1580,20 @@ void loadRom(Player& session, const fs::path& path)
 
 bool handleAction(Player& session, const SDL_Event& event)
 {
+    if (event.type == SDL_EVENT_KEY_DOWN || event.type == SDL_EVENT_KEY_UP)
+    {
+        const auto key = event.key.scancode;
+        const uint8_t direction = key == SDL_SCANCODE_UP ? 1 : key == SDL_SCANCODE_DOWN ? 2 :
+            key == SDL_SCANCODE_LEFT ? 4 : key == SDL_SCANCODE_RIGHT ? 8 : 0;
+        if (event.type == SDL_EVENT_KEY_UP)
+            session.menuDirectionKeys &= static_cast<uint8_t>(~direction);
+        else if (session.menuOpen && direction)
+        {
+            // repeatフラグが付かない重複通知も、キーを離すまでは再実行しない。
+            if (session.menuDirectionKeys & direction) return true;
+            session.menuDirectionKeys |= direction;
+        }
+    }
     if(session.items.open){
         if(!session.focused)return true;
         if(event.type==SDL_EVENT_KEY_DOWN){
@@ -2036,6 +2051,7 @@ int run(const std::vector<std::wstring>& args)
     unsigned frames = 0;
     using Clock = std::chrono::steady_clock;
     auto nextFrame = Clock::now();
+    auto nextDraw = nextFrame;
     auto nextSave = nextFrame + std::chrono::seconds(5);
     while (running)
     {
@@ -2069,6 +2085,7 @@ int run(const std::vector<std::wstring>& args)
             }
             if (event.type == SDL_EVENT_WINDOW_FOCUS_LOST)
             {
+                session.menuDirectionKeys = 0;
                 session.focused = false;
 #ifdef __ANDROID__
                 try { session.saveRam(); } catch(const std::exception& error) { session.reportActionError(error); }
@@ -2125,11 +2142,13 @@ int run(const std::vector<std::wstring>& args)
             require(session.callbackError.empty(), session.callbackError);
             ++frames;
         }
-#ifdef __ANDROID__
-        session.draw();
-#else
-        session.draw();
-#endif
+        // エミュレーションの倍率にかかわらず描画は約60Hzに抑え、音声生成の時間を確保する。
+        const auto drawNow = Clock::now();
+        if (session.smoke || drawNow >= nextDraw)
+        {
+            session.draw();
+            nextDraw = drawNow + std::chrono::microseconds(16667);
+        }
         try { session.finishRamSave(); }
         catch (const std::exception& error) { session.paused = true; session.reportActionError(error); }
         if (Clock::now() >= nextSave)
@@ -2147,7 +2166,9 @@ int run(const std::vector<std::wstring>& args)
         {
             nextFrame += std::chrono::duration_cast<Clock::duration>(std::chrono::duration<double>(1.0 / (session.fps * session.gameSpeed())));
             if (Clock::now() - nextFrame > std::chrono::milliseconds(100)) nextFrame = Clock::now();
-            std::this_thread::sleep_until(nextFrame);
+            const auto remaining = std::chrono::duration_cast<std::chrono::nanoseconds>(nextFrame - Clock::now()).count();
+            // 4倍速の約4ms間隔でもOSの粗い待機単位による音声供給不足を避ける。
+            if (remaining > 0) SDL_DelayPrecise(static_cast<Uint64>(remaining));
         }
     }
     session.saveRam();

@@ -9,12 +9,12 @@ ROM・ゲーム画像・音楽・セーブデータ・署名用の秘密鍵は�
 
 ## ダウンロードと起動
 
-リポジトリーの **Code → Download ZIP** から全体を取得して展開し、`0.2.11` フォルダーを開いてください。配布ZIPでも `WiizV_app/0.2.11/` 内を使用します。
+リポジトリーの **Code → Download ZIP** から全体を取得して展開し、`0.2.14` フォルダーを開いてください。配布ZIPでも `WiizV_app/0.2.14/` 内を使用します。
 
 - **Windows**：`Windows/WiizV.exe`を起動します。DLL・licensesも一緒に配置してください。
   必要なMicrosoft Visual C++ v14ランタイム（x64）が未導入の場合は、
   [Microsoft公式案内](https://learn.microsoft.com/en-us/cpp/windows/latest-supported-vc-redist/)から導入してください。
-- **Android**：[WiizV-0.2.11-release.apk](Android/WiizV-0.2.11-release.apk)を端末へコピーしてインストールします。
+- **Android**：[WiizV-0.2.14-release.apk](Android/WiizV-0.2.14-release.apk)を端末へコピーしてインストールします。
   起動後にDocumentsまたはDocuments/WiizVを選び、保存先へのアクセスを許可してROMを選択します。
   旧debug署名版から初めて移行する場合は上書きできません。
   保存フォルダー全体を別の場所へ控え、旧アプリをアンインストールしてから導入し、同じ保存フォルダーを選び直してください。
@@ -52,4 +52,4 @@ Windowsの動作検証、Android x86_64エミュレーターでの検証を行�
 
 WindowsはF4、Androidは移動の下の「アイテム」から開きます。左右２人の所持品を表示し、装備・移動・削除・並べ替え・未識別品の収集・未装備品の一括移動ができます。１人以上のパーティーで入力待ち中に使用できます。詳細は使用説明書を参照してください。
 
-配布ファイルは `WiizV_app/0.2.11/` にまとめています。このフォルダー内のWindows版・Android版をご使用ください。
+配布ファイルは `WiizV_app/0.2.14/` にまとめています。このフォルダー内のWindows版・Android版をご使用ください。

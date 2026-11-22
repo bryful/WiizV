@@ -16,6 +16,7 @@ inline float androidMapZoom = 32, androidMapCenterX = 0, androidMapCenterY = 0;
 inline int androidMapFloorSeen = 0, androidMapSelectedX = 999, androidMapSelectedY = 999;
 inline bool androidMapOverview = false, androidBackHeld = false;
 inline int androidMenuDirection = -1;
+inline int androidMenuPendingDirection = -1;
 inline Uint64 androidMenuRepeatAt = 0;
 
 inline void androidMenuKey(int key)
@@ -96,8 +97,9 @@ inline void androidReset(Player& session)
 inline void androidAction(Player& session, int action)
 {
     if(session.menuOpen){
-        if(action>=14&&action<=17)androidMenuKey(action==14?2:action==15?3:action==16?4:5);
-        else if(action==20)androidMenuKey(session.swapButtons?1:0);
+        // 方向ボタンはandroidTickで押下状態をまとめて処理する。
+        if(action>=14&&action<=17)androidMenuPendingDirection=action==14?2:action==15?3:action==16?4:5;
+        if(action==20)androidMenuKey(session.swapButtons?1:0);
         else if(action==21)androidMenuKey(session.swapButtons?0:1);
         else if(action==1)androidMenuKey(1);
         return;
@@ -171,7 +173,10 @@ inline bool androidEvent(Player& session, const SDL_Event& event)
             case SDL_SCANCODE_Z:key=session.swapButtons?0:1;break;
             default:break;
         }
-        if(key>=0&&(!event.key.repeat||key>=2))androidMenuKey(key);
+        // 方向はandroidTickでキーボード・パッドをまとめて読む。
+        // ここでも実行すると、同じ押下をイベントと状態取得で二重処理する。
+        if(key>=0&&key<2&&!event.key.repeat)androidMenuKey(key);
+        if(key>=2&&!event.key.repeat)androidMenuPendingDirection=key;
         return true;
     }
     if(session.mapOpen&&event.type==SDL_EVENT_GAMEPAD_BUTTON_DOWN){
@@ -188,7 +193,8 @@ inline bool androidEvent(Player& session, const SDL_Event& event)
             case SDL_GAMEPAD_BUTTON_DPAD_LEFT:key=4;break;case SDL_GAMEPAD_BUTTON_DPAD_RIGHT:key=5;break;
             default:break;
         }
-        if(key>=0){androidMenuKey(key);if(key>=2){androidMenuDirection=key;androidMenuRepeatAt=SDL_GetTicks()+300;}}
+        if(key>=0&&key<2)androidMenuKey(key);
+        if(key>=2)androidMenuPendingDirection=key;
         return true;
     }
     if (event.type == androidCommandEvent)
@@ -270,6 +276,8 @@ inline bool androidEvent(Player& session, const SDL_Event& event)
         androidFingers.erase(event.tfinger.fingerID); return true;
     }
     if (!session.focused) return true;
+    // メニュー更新によるサイズ・フォーカス通知で消えた指を、移動通知で再押下扱いにしない。
+    if(event.type==SDL_EVENT_FINGER_MOTION&&!androidFingers.contains(event.tfinger.fingerID))return true;
     auto& finger = androidFingers[event.tfinger.fingerID];
     if(finger.blocked)return true;
     if(event.type==SDL_EVENT_FINGER_MOTION&&(finger.action<14||finger.action>17))return true;
@@ -295,27 +303,42 @@ inline void androidTick(Player& session)
 {
     androidTouchMask = 0; androidTouchesHeld = !androidFingers.empty();
     const auto now = SDL_GetTicks();
-    if(session.menuOpen){
+    if(session.menuOpen&&session.focused){
         int direction=-1;
+        const auto buttons=readPhysicalButtons(session);
+        if(buttons&(1u<<RETRO_DEVICE_ID_JOYPAD_UP))direction=2;
+        else if(buttons&(1u<<RETRO_DEVICE_ID_JOYPAD_DOWN))direction=3;
+        else if(buttons&(1u<<RETRO_DEVICE_ID_JOYPAD_LEFT))direction=4;
+        else if(buttons&(1u<<RETRO_DEVICE_ID_JOYPAD_RIGHT))direction=5;
+        for(const auto& [id,finger]:androidFingers){(void)id;
+            if(direction>=0)break;
+            if(!finger.blocked&&finger.action>=14&&finger.action<=17)
+                direction=finger.action==14?2:finger.action==15?3:finger.action==16?4:5;
+        }
         for(const auto& [id,pad]:session.gamepads){(void)id;
             const auto horizontal=SDL_GetGamepadAxis(pad,SDL_GAMEPAD_AXIS_LEFTX),vertical=SDL_GetGamepadAxis(pad,SDL_GAMEPAD_AXIS_LEFTY);
-            if(vertical<-16000||SDL_GetGamepadButton(pad,SDL_GAMEPAD_BUTTON_DPAD_UP))direction=2;
-            else if(vertical>16000||SDL_GetGamepadButton(pad,SDL_GAMEPAD_BUTTON_DPAD_DOWN))direction=3;
-            else if(horizontal<-16000||SDL_GetGamepadButton(pad,SDL_GAMEPAD_BUTTON_DPAD_LEFT))direction=4;
-            else if(horizontal>16000||SDL_GetGamepadButton(pad,SDL_GAMEPAD_BUTTON_DPAD_RIGHT))direction=5;
+            if(direction>=0)break;
+            if(vertical<-16000)direction=2;
+            else if(vertical>16000)direction=3;
+            else if(horizontal<-16000)direction=4;
+            else if(horizontal>16000)direction=5;
         }
-        if(direction>=0&&(direction!=androidMenuDirection||now>=androidMenuRepeatAt)){
+        // 同じSDLポーリング中に押して離された短いタップも1回だけ残す。
+        if(direction<0)direction=androidMenuPendingDirection;
+        // 値を変える左右は、メニュー再描画中も離すまで1回だけ。上下の長押し移動は維持する。
+        if(direction>=0&&(direction!=androidMenuDirection||(direction<4&&now>=androidMenuRepeatAt))){
             androidMenuKey(direction);androidMenuRepeatAt=now+(direction!=androidMenuDirection?300:100);
         }
         androidMenuDirection=direction;
-    }else androidMenuDirection=-1;
+    }else if(!session.menuOpen)androidMenuDirection=-1;
+    androidMenuPendingDirection=-1;
     if(session.focused&&!session.menuOpen&&!session.items.open&&!session.mapOpen&&!session.paused)
         for(unsigned id=0;id<12;++id)if(androidTouchPulse[id]){androidTouchMask|=static_cast<uint16_t>(1u<<id);--androidTouchPulse[id];}
     for (auto& [id, finger] : androidFingers)
     {
         (void)id;
         if(finger.blocked)continue;
-        if ((session.menuOpen||session.mapOpen||session.items.open) && finger.action >= 14 && finger.action <= 17 && now >= finger.repeat)
+        if (!session.menuOpen&&(session.mapOpen||session.items.open) && finger.action >= 14 && finger.action <= 17 && now >= finger.repeat)
         {
             androidAction(session, finger.action); finger.repeat = now + 100;
         }
